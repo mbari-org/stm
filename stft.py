@@ -17,7 +17,7 @@ def ensure_dir(fname):
         os.makedirs(d)
 
 
-def read_wav(filepath, verbose = False):
+def read_wav(filepath, verbose=False):
     if verbose:
         print('Reading from %s' % filepath)
     fs, x = wavfile.read(filepath)
@@ -25,48 +25,38 @@ def read_wav(filepath, verbose = False):
         print('Done.')
     if verbose:
         print('Sample Rate: %d' % fs)
-        print('Recording Length (s): %f' % (len(x)/fs))
+        print('Recording Length (s): %f' % (len(x) / fs))
         print('Number of Samples: %d' % len(x))
     return fs, x.astype(float)
 
 
 def compute_stft(signal, window_size, overlap):
-    stp = int(window_size*(1-overlap))
-    stft = np.abs(librosa.stft(y = signal, n_fft=window_size, hop_length=stp))
+    stp = int(window_size * (1 - overlap))
+    stft = np.divide(np.abs(librosa.stft(y=signal, n_fft=window_size, hop_length=stp)),
+                     window_size)
     return stft
 
 
 def normalize(arr):
     mean = np.mean(arr)
     std = np.std(arr)
-    normalized = np.divide( np.subtract(arr, mean), std)
+    normalized = np.divide(np.subtract(arr, mean), std)
     return normalized
 
 
-def get_subset(stft, rng, num_freq_bins = 16000):
-    hz_per_bin = num_freq_bins/len(stft)
-    lo_bin = math.floor(rng[0]/hz_per_bin)
-    hi_bin = math.ceil(rng[1]/hz_per_bin)
+def get_subset(stft, rng, num_freq_bins=16000):
+    hz_per_bin = num_freq_bins / len(stft)
+    lo_bin = math.floor(rng[0] / hz_per_bin)
+    hi_bin = math.ceil(rng[1] / hz_per_bin)
     print('LO %d' % lo_bin)
     print('HI %d' % hi_bin)
-    return stft[lo_bin:hi_bin+1]
+    return stft[lo_bin:hi_bin + 1]
 
 
-def main():
-
-    # parameters
-    window_size = 1024
-    overlap = 0.5
-    subset = (50, 5000)
-
-    # parameter string for file/directory
-    param_string = 'stft_win_%d_ovr_%d' % (window_size, int(overlap * 100))
-    if type(subset) == tuple:
-        param_string = param_string + '_' + str(subset[0]) + 'hz_' + str(subset[1]) + 'hz'
+def run(in_dir, window_size, overlap, subset=None):
 
     # input and output directories
-    in_dir = '/Users/bergamaschi/Documents/HumpbackSong/test/'
-    out_dir = './out/' + param_string + '/'
+    out_dir = "./out/stft/win_{}/ovr_{}/sub_{}/".format(window_size, overlap, subset)
     ensure_dir(out_dir)
 
     # file number and time variables
@@ -131,7 +121,7 @@ def main():
         # dump dataframe as .pkl
         print('Pickling...')
         t_0 = time.time()
-        pkl.dump(df, open(out_dir + name + '_' + param_string + '.pkl', "wb"))
+        pkl.dump(df, open(out_dir + name + '.pkl', "wb"))
         t_1 = time.time()
         pkl_time += (t_1 - t_0)
         print('Done. (%f seconds)' % (t_1 - t_0))
@@ -166,7 +156,5 @@ def main():
     print('Avg: %f seconds' % (pkl_time / num_files))
     print('Total Runtime: %f seconds' % (read_time + fft_time + df_conv_time + pkl_time))
 
-
-if __name__ == '__main__':
-    main()
+    return out_dir
 
