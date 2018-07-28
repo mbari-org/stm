@@ -12,10 +12,9 @@ def ensure_dir(fname):
         os.makedirs(d)
 
 
-def main():
+def run(in_dir, k):
     # ===>Load data<====
-    in_dir = './out/stft_win_1024_ovr_50_50hz_5000hz/'
-    out_dir = './out/clustering/'
+    out_dir = in_dir+"k_{}/".format(k)
 
     num_files = 0
     data = pd.DataFrame()
@@ -23,20 +22,19 @@ def main():
     lengths = []
     names = []
 
-    for pkl_file in glob.glob(in_dir + '*.pkl'):
+    for filename in glob.glob(in_dir + '*.pkl'):
         # increment num_files and start timer
         num_files += 1
         t0 = time.time()
 
-        print('Reading File #%d: %s' % (num_files, pkl_file))
+        print('Reading File #%d: %s' % (num_files, filename))
 
         # load pickle
-        df = pkl.load(open(pkl_file, "rb"))
+        df = pkl.load(open(filename, "rb"))
 
         # add song name and frame num columns
-        name = pkl_file.split('/')[-1]
+        name = filename.split('/')[-1]
         name = name.split('.')[0]
-        name = name.split('_')[0] + '_' + name.split('_')[1]
         df['song_name'] = [name] * len(df)
         df['frame_num'] = list(range(len(df)))
         names.append(name)
@@ -57,16 +55,18 @@ def main():
 
     # ===>Minibatch K-Means<===
 
-    # k values and parameters
-    k = 100  # [1000, 10000, 20000, 30000, 40000, 50000]
-    batch_size = 100
+    # parameters:
 
-    # run minibatch k-means
+    # see this stack overflow for reasoning on chosen reassignment ratio value
+    # https://stackoverflow.com/questions/21447351/minibatchkmeans-parameters
+    reassignment_ratio = 0
+    batch_size = 3 * k
     init_size = 3 * k
-    mbk = MiniBatchKMeans(n_clusters=k, batch_size=batch_size, init_size=init_size)
+    kmeans = MiniBatchKMeans(n_clusters=k, batch_size=batch_size, init_size=init_size,
+                          reassignment_ratio=reassignment_ratio)
     print('Running MiniBatch K-Means with K = {}...'.format(k))
     t0 = time.time()
-    mbk.fit(data.drop(['song_name', 'frame_num'], axis=1))
+    kmeans.fit(data.drop(['song_name', 'frame_num'], axis=1))
     print('Fit in %s seconds' % (time.time() - t0))
 
     # make directories
@@ -75,9 +75,9 @@ def main():
     ensure_dir(labels_dir)
 
     # centroids dataframe
-    codebook = pd.DataFrame(mbk.cluster_centers_)
+    codebook = pd.DataFrame(kmeans.cluster_centers_)
     print('Pickling codebook...')
-    pkl.dump(codebook, open(out_dir + "K_{}_codebook.pkl".format(k), "wb"))
+    pkl.dump(codebook, open(out_dir + "codebook.pkl", "wb"))
     print('Done.')
 
     # labels dataframes for each song
@@ -85,11 +85,11 @@ def main():
     print('Pickling labels')
     for i in range(num_files):
         hi = lo + lengths[i]
-        labels = pd.DataFrame({'labels': mbk.labels_[lo:hi]})
+        labels = pd.DataFrame({'labels': kmeans.labels_[lo:hi]})
         lo = hi
         pkl.dump(labels, open(labels_dir + "labels_{}.pkl".format(names[i]), "wb"))
     print('Done.')
 
+    return out_dir
 
-if __name__ == '__main__':
-    main()
+
