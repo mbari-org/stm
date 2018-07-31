@@ -17,48 +17,39 @@ def write_csv(docs, fname):
         writer.writerows(docs)
 
 
-def main():
+def run(in_dir, words_per_doc, window_size, overlap, fs=32000):
 
-    # parameters
-    fs = 32000
-    frame_len = 1024
-    overlap = 0.5
-    doc_len = 32
+    out_dir = './out/model/{}_word_docs/'.format(words_per_doc)
 
-    in_dir = './out/clustering/labels/'
-    out_dir = './out/documents/'
+    for filename in glob.glob(in_dir + '*.pkl'):
 
-    for pkl_file in glob.glob(in_dir + '*.pkl'):
+        name = filename.split('/')[-1]
+        name = name.split('.')[0]
+        name = name.split('_')[-2]+'_'+name.split('_')[-1]
 
-        filename = pkl_file.split('/')[-1]
-        filename = filename.split('.')[0]
-        filename = filename.split('_')[-2]+'_'+filename.split('_')[-1]
+        print("Making documents with {} words for {}...".format(words_per_doc, name))
 
-        print("Making documents for {}...".format(filename))
+        labels = pkl.load(open(filename, "rb"))
 
-        labels = pkl.load(open(pkl_file, "rb"))
-
-        ms_per_word = int(((frame_len/fs)*overlap)*1000)
+        ms_per_word = int(((window_size / fs) * overlap) * 1000)
         docs = []
 
         i = 0
-        j = doc_len
+        j = words_per_doc
         while i < len(labels):
             timestamp = j*ms_per_word
             d = [timestamp]
             d.extend(list(labels['labels'][i:j]))
             docs.append(d)
-            i += doc_len
-            if (j+doc_len) <= len(labels):
-                j += doc_len
+            i += words_per_doc
+            if (j+words_per_doc) <= len(labels):
+                j += words_per_doc
             else:
                 j = len(labels)
 
-        write_csv(docs, out_dir+"doc_"+str(doc_len)+"_"+filename+".csv")
+        write_csv(docs, out_dir+name+".csv")
 
         print('Done.')
 
-
-if __name__ == "__main__":
-    main()
+    return out_dir
 

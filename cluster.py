@@ -68,7 +68,6 @@ def run(in_dir, k, minibatch=False):
 
     # ===>Minibatch K-Means<===
 
-
     if minibatch:
         # mbk parameters:
         # see this stack overflow for reasoning on chosen reassignment ratio value

@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 import subprocess
+import os
+import csv
 
 
 def execute(cmd):
@@ -16,42 +18,63 @@ def flip_list(l):
     return np.array(temp)
 
 
-def main():
-    documents_path = "/Users/bergamaschi/Documents/PAM/documents_HBSe_20151207T070326.csv"
-    model_path = "/Users/bergamaschi/Documents/PAM/ROST_output/"
+def ensure_dir(fname):
+    d = os.path.dirname(fname)
+    if not os.path.exists(d):
+        os.makedirs(d)
 
-    W = 10000  # vocabulary size
-    T = 10  # topic size
-    alpha = 0.1  # sparsity of theta
-    beta = 1  # sparsity of phi
-    online_mint = 5  # min time in ms to spend between new observation timestep
-    threads = 4
-    g_time = 0  # depth of temporal neighborhood in #cells
-    g_space = 0  # depth of spacial neighborhood in #cells
-    cell_space = 0  # cell width in time dim
 
-    gamma = 0.0000001  # ???
-    grow_topics_size = 1  # ???
+def write_csv(data, fname):
+    ensure_dir(fname)
+    with open(fname, "w") as f:
+        writer = csv.writer(f, delimiter=',')
+        writer.writerows(data)
+
+
+def run(in_dir, filename, W, T, alpha, beta,
+        g_time, cell_space, threads=4,
+        online=False, online_mint=5):
+
+    # TODO: Add chinese restaurant problem option
+
+    """
+
+    :param in_dir: directory containing document CSV
+    :param filename: name of csv
+    :param W: vocabulary size
+    :param T: topic size
+    :param alpha: sparsity of theta
+    :param beta: sparsity of phi
+    :param threads: number of threads
+    :param g_time: depth of temporal neighborhood
+    :param cell_space: cell width in time dimension
+    :param online: run ROST online
+    :param online_mint: min time (in ms) to spend between observation time steps
+    :return: path to directory containing topic model CSVs
+    """
+
+    model_path = "./out/model/"
 
     top_mod_cmd = ["/Users/bergamaschi/rost-cli/bin/topics.refine.t",
-                   "-i", documents_path,
+                   "-i", in_dir+filename+".csv",
                    "--out.topics=" + model_path + "topics.csv",
                    "--out.topics.ml=" + model_path + "topics.maxlikelihood.csv",
                    "--out.topicmodel=" + model_path + "topicmodel.csv",
                    "--ppx.out=" + model_path + "perplexity.csv",
                    "--logfile=" + model_path + "topics.log",
-                   "--out.topics.online=" + model_path + "topics.online.csv",
-                   "--out.ppx.online=" + model_path + "perplexity.online.csv",
                    "-V", str(W),
                    "-K", str(T),
                    "--alpha=" + str(alpha),
                    "--beta=" + str(beta),
-                   "--online",
-                   "--online.mint", str(online_mint),
                    "--threads", str(threads),
                    "--g.time=" + str(g_time),
-                   "--g.space=" + str(g_space),
                    "--cell.space=" + str(cell_space)]
+
+    if online:
+        top_mod_cmd.extend(["--online",
+                            "--out.topics.online=" + model_path + "topics.online.csv",
+                            "--out.ppx.online=" + model_path + "perplexity.online.csv",
+                            "--online.mint", str(online_mint)])
 
     bin_cnt_cmd = ["/Users/bergamaschi/rost-cli/bin/words.bincount",
                    "-i", model_path + "topics.maxlikelihood.csv",
@@ -75,6 +98,7 @@ def main():
         for w in range(W):
             numerator = topic_model[z][w] + beta
             phi[z][w] = numerator / denominator
+    write_csv(phi, model_path+"phi.csv")
 
     # ===>compute theta<===
     D = len(topic_hist)  # number of documents
@@ -86,7 +110,8 @@ def main():
             numerator = topic_hist[d][z] + alpha
             theta[d][z] = numerator / denominator
 
+    write_csv(theta, model_path+"theta.csv")
 
-if __name__ == "__main__":
-    main()
+
+
 

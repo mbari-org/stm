@@ -1,4 +1,7 @@
+.DS_Store
 out/*
 .idea/
 __pycache__/
 venv/
+*.zip
+*.csv

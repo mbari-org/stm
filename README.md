@@ -3,7 +3,7 @@
 
 ## Installing Requirements
 ```angular2html
-$ virtualenv venv
+$ virtualenv --python=python3.5 venv
 $ source venv/bin/activate
 (venv) $ pip install -r requirements.txt
 ```
