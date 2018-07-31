@@ -101,12 +101,6 @@ def run(in_dir, window_size, overlap, subset=None):
         stft = gaussian_filter(stft, sigma=2)
         print('Done.')
 
-        # TODO: add normalization timer
-        # normalization
-        print('Normalizing...')
-        stft = normalize(stft)
-        print('Done.')
-
         # convert to dataframe
         print('Converting to dataframe...')
         t_0 = time.time()

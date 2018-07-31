@@ -10,12 +10,12 @@ def preprocessing():
     in_dir = '/Users/bergamaschi/Documents/HumpbackSong/test/'
 
     # stft parameters
-    window_size = [512, 1024, 2048, 4096]
-    overlap = [0.25, 0.5, 0.9]
-    subset = (50, 5000)
+    window_size = [1024]
+    overlap = [0.5]
+    subset = (50, 2000)
 
     # kmeans parameters
-    k_vals = [10, 20]
+    k_vals = [10000]
 
     for win in window_size:
         for ovr in overlap:

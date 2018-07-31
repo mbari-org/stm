@@ -4,6 +4,7 @@ import pandas as pd
 import glob
 import os
 from sklearn.cluster import MiniBatchKMeans
+from sklearn.cluster import KMeans
 
 
 def ensure_dir(fname):
@@ -12,7 +13,7 @@ def ensure_dir(fname):
         os.makedirs(d)
 
 
-def run(in_dir, k):
+def run(in_dir, k, minibatch=False):
     # ===>Load data<====
     out_dir = in_dir+"k_{}/".format(k)
 
@@ -35,8 +36,6 @@ def run(in_dir, k):
         # add song name and frame num columns
         name = filename.split('/')[-1]
         name = name.split('.')[0]
-        df['song_name'] = [name] * len(df)
-        df['frame_num'] = list(range(len(df)))
         names.append(name)
 
         # append to data
@@ -53,20 +52,37 @@ def run(in_dir, k):
     print('Total load time: %f seconds' % t_load)
     print('Total data points loaded: %d' % len(data))
 
+    # ===>Vector Whitening<===
+
+    # compute mean and std
+    mean = data.mean()
+    std = data.std()
+
+    # subtract mean and divide by std
+    normed_data = data.subtract(mean)
+    normed_data = normed_data.divide(std)
+
     # ===>Minibatch K-Means<===
 
-    # parameters:
 
-    # see this stack overflow for reasoning on chosen reassignment ratio value
-    # https://stackoverflow.com/questions/21447351/minibatchkmeans-parameters
-    reassignment_ratio = 0
-    batch_size = 3 * k
-    init_size = 3 * k
-    kmeans = MiniBatchKMeans(n_clusters=k, batch_size=batch_size, init_size=init_size,
-                          reassignment_ratio=reassignment_ratio)
-    print('Running MiniBatch K-Means with K = {}...'.format(k))
+    if minibatch:
+        # mbk parameters:
+        # see this stack overflow for reasoning on chosen reassignment ratio value
+        # https://stackoverflow.com/questions/21447351/minibatchkmeans-parameters
+        reassignment_ratio = 0
+        batch_size = 10 * k
+        init_size = 3 * k
+        kmeans = MiniBatchKMeans(n_clusters=k, batch_size=batch_size, init_size=init_size,
+                                 reassignment_ratio=reassignment_ratio)
+        print('Running MiniBatch K-Means with K = {}...'.format(k))
+
+    else:
+        kmeans = KMeans(n_clusters=k)
+        print('Running K-Means with K = {}...'.format(k))
+
+
     t0 = time.time()
-    kmeans.fit(data.drop(['song_name', 'frame_num'], axis=1))
+    kmeans.fit(normed_data)
     print('Fit in %s seconds' % (time.time() - t0))
 
     # make directories
