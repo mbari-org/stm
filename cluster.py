@@ -52,8 +52,10 @@ def run(in_dir, k, minibatch=False):
     print('Total load time: %f seconds' % t_load)
     print('Total data points loaded: %d' % len(data))
 
-    # ===>Vector Whitening<===
+    # ===>Normalization<===
+    print('Normalizing...')
 
+    t0 = time.time()
     # compute mean and std
     mean = data.mean()
     std = data.std()
@@ -61,6 +63,8 @@ def run(in_dir, k, minibatch=False):
     # subtract mean and divide by std
     normed_data = data.subtract(mean)
     normed_data = normed_data.divide(std)
+
+    print("Done. (%f seconds)"%(time.time() - t0))
 
     # ===>Minibatch K-Means<===
 
