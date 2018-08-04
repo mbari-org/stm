@@ -11,13 +11,6 @@ def execute(cmd):
     return output, error
 
 
-def flip_list(l):
-    temp = []
-    for i in range(len(l[0])):
-        temp.append(l[:,i])
-    return np.array(temp)
-
-
 def ensure_dir(fname):
     d = os.path.dirname(fname)
     if not os.path.exists(d):
@@ -35,7 +28,7 @@ def run(in_dir, filename, W, T, alpha, beta,
         g_time, cell_space, threads=4,
         online=False, online_mint=5):
 
-    # TODO: Add chinese restaurant problem option
+    # TODO: Add chinese restaurant process option
 
     """
 
@@ -91,7 +84,7 @@ def run(in_dir, filename, W, T, alpha, beta,
     topic_hist = pd.read_csv(model_path + "topics.hist.csv", header=None).drop(0, axis=1).values
 
     # ===>compute phi<===
-    phi = np.empty((T, W))
+    phi = np.zeros((T, W))
 
     for z in range(T):
         denominator = np.sum(topic_model[z]) + (W * beta)
@@ -102,7 +95,7 @@ def run(in_dir, filename, W, T, alpha, beta,
 
     # ===>compute theta<===
     D = len(topic_hist)  # number of documents
-    theta = np.empty((D, T))
+    theta = np.zeros((D, T))
 
     for d in range(D):
         denominator = np.sum(topic_hist[d]) + (T * alpha)

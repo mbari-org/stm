@@ -32,6 +32,7 @@ def read_wav(filepath, verbose=False):
 
 def compute_stft(signal, window_size, overlap):
     stp = int(window_size * (1 - overlap))
+    # divide by window_size to convert to amplitude
     stft = np.divide(np.abs(librosa.stft(y=signal, n_fft=window_size, hop_length=stp)),
                      window_size)
     return stft
@@ -44,8 +45,8 @@ def normalize(arr):
     return normalized
 
 
-def get_subset(stft, rng, num_freq_bins=16000):
-    hz_per_bin = num_freq_bins / len(stft)
+def get_subset(stft, rng, freq_range=16000):
+    hz_per_bin = freq_range / len(stft)
     lo_bin = math.floor(rng[0] / hz_per_bin)
     hi_bin = math.ceil(rng[1] / hz_per_bin)
     print('LO %d' % lo_bin)

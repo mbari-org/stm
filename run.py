@@ -2,13 +2,14 @@ import stft
 import cluster
 import labels_to_documents
 import topic_model
+import config as cnf
 
 # TODO: change file types from pickle to JSON
 
 
 def preprocessing():
 
-    in_dir = '/Users/bergamaschi/Documents/HumpbackSong/test/'
+    in_dir = cnf.WAVPATH
 
     # stft parameters to iterate over
     window_size = [1024]
@@ -69,11 +70,49 @@ def modeling():
                                  g_time=g_time, cell_space=cell_space,
                                  online=online, online_mint=online_mint)
 
+def classification():
+
+    # ===>Preprocessing<===
+
+    # For entire data set:
+    #   Compute stft
+    #   Subset
+    #   Gaussian filter
+
+    # For training set:
+    #   Compute avg, std
+    #   Normalize
+    #   Cluster and save codebook/labels
+    #   Group labels into documents
+    #   Label documents
+
+
+    # For testing set:
+    #   Normalize using training avg/std
+    #   Quantize using training codebook
+    #   Group labels into documents
+    #   Label documents
+
+    # ===>Training<===
+
+    # Run ROST on training documents
+    # Compute marginal distribution: P(class | k = z)
+    # Plot marginal distribution
+    # Compute conditional distribution: P(k = z | class)
+    # Assign topics their highest probability label
+
+    # ===>Testing<===
+
+    # Run ROST on testing docs using:
+    #   --in.topicmodel <in.topicmodel.csv>
+    #   --topicmodel.update=0
+
+    # Compute P(z=k | d)
 
 if __name__ == '__main__':
-    #preprocessing()
+    # preprocessing()
     doc_building()
-    modeling()
+    # modeling()
 
 
 
