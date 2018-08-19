@@ -1,41 +1,28 @@
 import pandas as pd
 import numpy as np
-import subprocess
-import os
-import csv
+
+import conf
+from util import execute
+from util import ensure_dir
+from util import write_csv
 
 
-def execute(cmd):
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    output, error = process.communicate()
-    return output, error
-
-
-def ensure_dir(fname):
-    d = os.path.dirname(fname)
-    if not os.path.exists(d):
-        os.makedirs(d)
-
-
-def write_csv(data, fname):
-    ensure_dir(fname)
-    with open(fname, "w") as f:
-        writer = csv.writer(f, delimiter=',')
-        writer.writerows(data)
-
-
-def run(in_dir, filename, W, T, alpha, beta,
-        g_time, cell_space, threads=4,
-        online=False, online_mint=5):
+def main(in_dir=conf.doc_path, out_dir=conf.model_path,
+         rost_path=conf.rost_path, target_file=conf.target_file,
+         W=conf.vocab_size, T=conf.num_topics, alpha=conf.alpha, beta=conf.beta,
+         g_time=conf.g_time, cell_space=conf.cell_space, threads=conf.threads,
+         online=conf.online, online_mint=conf.online_mint):
 
     # TODO: Add chinese restaurant process option
 
     """
 
     :param in_dir: directory containing document CSV
-    :param filename: name of csv
+    :param rost_path: path to ROST executables
+    :param model_path: path to directory where model output should be saved
+    :param target_file: name of documents csv file
     :param W: vocabulary size
-    :param T: topic size
+    :param T: number of topics
     :param alpha: sparsity of theta
     :param beta: sparsity of phi
     :param threads: number of threads
@@ -46,10 +33,11 @@ def run(in_dir, filename, W, T, alpha, beta,
     :return: path to directory containing topic model CSVs
     """
 
-    model_path = "./out/model/"
+    model_path = out_dir + "alpha_{}_beta_{}/".format(alpha, beta)
+    ensure_dir(model_path)
 
-    top_mod_cmd = ["/Users/bergamaschi/rost-cli/bin/topics.refine.t",
-                   "-i", in_dir+filename+".csv",
+    top_mod_cmd = [rost_path +"topics.refine.t",
+                   "-i", in_dir + target_file + ".csv",
                    "--out.topics=" + model_path + "topics.csv",
                    "--out.topics.ml=" + model_path + "topics.maxlikelihood.csv",
                    "--out.topicmodel=" + model_path + "topicmodel.csv",
@@ -69,7 +57,7 @@ def run(in_dir, filename, W, T, alpha, beta,
                             "--out.ppx.online=" + model_path + "perplexity.online.csv",
                             "--online.mint", str(online_mint)])
 
-    bin_cnt_cmd = ["/Users/bergamaschi/rost-cli/bin/words.bincount",
+    bin_cnt_cmd = [rost_path +"words.bincount",
                    "-i", model_path + "topics.maxlikelihood.csv",
                    "-o", model_path + "topics.hist.csv",
                    "-V", str(T)]
@@ -83,6 +71,7 @@ def run(in_dir, filename, W, T, alpha, beta,
     topic_model = pd.read_csv(model_path + "topicmodel.csv", header=None).values
     topic_hist = pd.read_csv(model_path + "topics.hist.csv", header=None).drop(0, axis=1).values
 
+    # TODO: make compute_phi function
     # ===>compute phi<===
     phi = np.zeros((T, W))
 
@@ -91,8 +80,9 @@ def run(in_dir, filename, W, T, alpha, beta,
         for w in range(W):
             numerator = topic_model[z][w] + beta
             phi[z][w] = numerator / denominator
-    write_csv(phi, model_path+"phi.csv")
+    write_csv(phi, model_path + "phi.csv")
 
+    # TODO: make compute_theta function
     # ===>compute theta<===
     D = len(topic_hist)  # number of documents
     theta = np.zeros((D, T))
@@ -103,8 +93,14 @@ def run(in_dir, filename, W, T, alpha, beta,
             numerator = topic_hist[d][z] + alpha
             theta[d][z] = numerator / denominator
 
-    write_csv(theta, model_path+"theta.csv")
+    write_csv(theta, model_path + "theta.csv")
 
 
+if __name__ == "__main__":
+    alpha = [0.9, 0.5, 0.1, 0.01, 0.001]
+    beta = [0.9, 0.5, 0.1, 0.01, 0.001]
+    for a in alpha:
+        for b in beta:
+            main(alpha=a, beta=b)
 
 

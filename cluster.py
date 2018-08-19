@@ -1,22 +1,60 @@
 import pickle as pkl
 import time
+import numpy as np
 import pandas as pd
 import glob
-import os
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster import KMeans
+from sklearn.metrics.pairwise import pairwise_distances
+
+import conf
+from util import ensure_dir
 
 
-def ensure_dir(fname):
-    d = os.path.dirname(fname)
-    if not os.path.exists(d):
-        os.makedirs(d)
+def cluster(data, k, cluster_type=conf.cluster_type):
+    if cluster_type is 'mbk':
+        # mbk parameters:
+        # see this stack overflow for reasoning on chosen reassignment ratio value
+        # https://stackoverflow.com/questions/21447351/minibatchkmeans-parameters
+        reassignment_ratio = 0
+        batch_size = 10 * k
+        init_size = 3 * k
+        clust = MiniBatchKMeans(n_clusters=k, batch_size=batch_size, init_size=init_size,
+                                 reassignment_ratio=reassignment_ratio)
+        print('Running MiniBatch K-Means with K = {}...'.format(k))
+
+    elif cluster_type is 'kmeans':
+        clust = KMeans(n_clusters=k)
+        print('Running K-Means with K = {}...'.format(k))
+
+    else:
+        raise IOError("Invalid cluster_type. Use cluster_type=\'kmeans\' for kmeans or"
+                      "cluster_type=\'mbk\' for minibatch kmeans.")
+
+    t0 = time.time()
+    clust.fit(data)
+    print('Fit in %s seconds' % (time.time() - t0))
+    return clust.cluster_centers_, clust.labels_
 
 
-def run(in_dir, k, minibatch=False):
-    # ===>Load data<====
-    out_dir = in_dir+"k_{}/".format(k)
+def quantize(data, code_book):
+    """
 
+    :param data:
+    :param code_book:
+    :return:
+    """
+    distances = pairwise_distances(X=data, Y=code_book)
+    code = np.argmin(distances, axis=1)
+    return pd.DataFrame(code)
+
+
+def main(in_dir=conf.stft_path, out_dir=conf.cluster_path,
+         k=conf.vocab_size, cluster_type=conf.cluster_type):
+
+    ensure_dir(out_dir)
+
+    # load spectrograms into dataframe
     num_files = 0
     data = pd.DataFrame()
     t_load = 0
@@ -52,7 +90,7 @@ def run(in_dir, k, minibatch=False):
     print('Total load time: %f seconds' % t_load)
     print('Total data points loaded: %d' % len(data))
 
-    # ===>Normalization<===
+    # normalize FFT frames before clustering
     print('Normalizing...')
 
     t0 = time.time()
@@ -61,54 +99,31 @@ def run(in_dir, k, minibatch=False):
     std = data.std()
 
     # subtract mean and divide by std
-    normed_data = data.subtract(mean)
-    normed_data = normed_data.divide(std)
+    data = data.subtract(mean)
+    data = data.divide(std)
 
-    print("Done. (%f seconds)"%(time.time() - t0))
+    print("Done. (%f seconds)" % (time.time() - t0))
 
-    # ===>Minibatch K-Means<===
+    # ===>Clustering<===
 
-    if minibatch:
-        # mbk parameters:
-        # see this stack overflow for reasoning on chosen reassignment ratio value
-        # https://stackoverflow.com/questions/21447351/minibatchkmeans-parameters
-        reassignment_ratio = 0
-        batch_size = 10 * k
-        init_size = 3 * k
-        kmeans = MiniBatchKMeans(n_clusters=k, batch_size=batch_size, init_size=init_size,
-                                 reassignment_ratio=reassignment_ratio)
-        print('Running MiniBatch K-Means with K = {}...'.format(k))
+    # cluster FFT frames
+    codebook, labels = cluster(data, k, cluster_type)
 
-    else:
-        kmeans = KMeans(n_clusters=k)
-        print('Running K-Means with K = {}...'.format(k))
-
-
-    t0 = time.time()
-    kmeans.fit(normed_data)
-    print('Fit in %s seconds' % (time.time() - t0))
-
-    # make directories
-    labels_dir = out_dir+'/labels/'
-    ensure_dir(out_dir)
-    ensure_dir(labels_dir)
-
-    # centroids dataframe
-    codebook = pd.DataFrame(kmeans.cluster_centers_)
+    codebook = pd.DataFrame(codebook)
     print('Pickling codebook...')
     pkl.dump(codebook, open(out_dir + "codebook.pkl", "wb"))
     print('Done.')
 
-    # labels dataframes for each song
+    # make dataframes for individual song labels
     lo = 0
     print('Pickling labels')
     for i in range(num_files):
         hi = lo + lengths[i]
-        labels = pd.DataFrame({'labels': kmeans.labels_[lo:hi]})
+        labels = pd.DataFrame(labels[lo:hi])
         lo = hi
-        pkl.dump(labels, open(labels_dir + "labels_{}.pkl".format(names[i]), "wb"))
+        pkl.dump(labels, open(out_dir+"labels_{}.pkl".format(names[i]), "wb"))
     print('Done.')
 
-    return out_dir
 
-
+if __name__ == "__main__":
+    main()
