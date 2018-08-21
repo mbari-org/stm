@@ -63,6 +63,8 @@ def main(in_dir=conf.cluster_path, out_dir=conf.doc_path,
 
         labels = pkl.load(open(filename, "rb"))
 
+        print(labels)
+
         ms_per_word = int(((window_size / fs) * overlap) * 1000)
         docs = []
 
@@ -71,13 +73,14 @@ def main(in_dir=conf.cluster_path, out_dir=conf.doc_path,
         while i < len(labels):
             timestamp = j*ms_per_word
             d = [timestamp]
-            d.extend(list(labels[i:j]))
+            d.extend(labels[0].values[i:j])
             docs.append(d)
             i += words_per_doc
             if (j+words_per_doc) <= len(labels):
                 j += words_per_doc
             else:
                 j = len(labels)
+            print(d)
 
         write_csv(docs, out_dir + name + ".csv")
 
