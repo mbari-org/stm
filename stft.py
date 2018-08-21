@@ -55,10 +55,10 @@ def normalize(stft):
     :param stft: spectrogram to normalize
     :return normalized: the normalized spectrogram
     """
-    mean = np.mean(stft.values)
-    std = np.std(stft.values)
-    normalized = stft.subtract(mean)
-    normalized = normalized.divide(std)
+    mean = np.mean(stft)
+    std = np.std(stft)
+    normalized = np.subtract(stft, mean)
+    normalized = np.divide(normalized, std)
     return normalized
 
 
@@ -136,6 +136,10 @@ def main(in_dir=conf.wav_path, out_dir=conf.stft_path,
         # gaussian filter
         print('Gaussian filtering...')
         stft = gaussian_filter(stft, sigma=2)
+        print('Done.')
+
+        print('Normalizing...')
+        stft = normalize(stft)
         print('Done.')
 
         # convert to dataframe

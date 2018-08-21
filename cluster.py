@@ -6,6 +6,8 @@ import glob
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster import KMeans
 from sklearn.metrics.pairwise import pairwise_distances
+from sklearn.decomposition import PCA
+from sklearn.metrics import silhouette_score
 
 import conf
 from util import ensure_dir
@@ -34,9 +36,9 @@ def cluster(data, k, cluster_type=conf.cluster_type):
     t0 = time.time()
     clust.fit(data)
     print('Fit in %s seconds' % (time.time() - t0))
-    return clust.cluster_centers_, clust.labels_
+    return clust.cluster_centers_, clust.labels_, clust.inertia_
 
-
+# TODO: Quantize docstring
 def quantize(data, code_book):
     """
 
@@ -49,8 +51,22 @@ def quantize(data, code_book):
     return pd.DataFrame(code)
 
 
+# TODO: whiten docstring
+def whiten(data, whiten_type='std'):
+    if whiten_type is 'std':
+        whitened = data.divide(data.std(axis=0, ddof=0), axis=1)
+    if whiten_type is 'pca':
+        pca = PCA(whiten=True)
+        whitened = pd.DataFrame(pca.fit_transform(data))
+    else:
+        raise IOError("Invalid whiten_type. Use whiten_type=\'std\' for scaling by standard deviation or"
+                      "whiten_type=\'pca\' for whitening with principle component analysis.")
+    return whitened
+
+
 def main(in_dir=conf.stft_path, out_dir=conf.cluster_path,
-         k=conf.vocab_size, cluster_type=conf.cluster_type):
+         k=conf.vocab_size, cluster_type=conf.cluster_type,
+         return_inertia=False):
 
     ensure_dir(out_dir)
 
@@ -60,6 +76,8 @@ def main(in_dir=conf.stft_path, out_dir=conf.cluster_path,
     t_load = 0
     lengths = []
     names = []
+
+    print("Reading from: %s" % out_dir)
 
     for filename in glob.glob(in_dir + '*.pkl'):
         # increment num_files and start timer
@@ -90,24 +108,17 @@ def main(in_dir=conf.stft_path, out_dir=conf.cluster_path,
     print('Total load time: %f seconds' % t_load)
     print('Total data points loaded: %d' % len(data))
 
-    # normalize FFT frames before clustering
-    print('Normalizing...')
-
+    # whiten FFT frames before clustering
+    print('Whitening...')
     t0 = time.time()
-    # compute mean and std
-    mean = data.mean()
-    std = data.std()
-
-    # subtract mean and divide by std
-    data = data.subtract(mean)
-    data = data.divide(std)
-
+    data = whiten(data, whiten_type='pca')
     print("Done. (%f seconds)" % (time.time() - t0))
 
     # ===>Clustering<===
 
     # cluster FFT frames
-    codebook, labels = cluster(data, k, cluster_type)
+    codebook, labels, inertia = cluster(data, k, cluster_type)
+    print("Distortion = %f" % inertia)
 
     codebook = pd.DataFrame(codebook)
     print('Pickling codebook...')
@@ -119,10 +130,13 @@ def main(in_dir=conf.stft_path, out_dir=conf.cluster_path,
     print('Pickling labels')
     for i in range(num_files):
         hi = lo + lengths[i]
-        labels = pd.DataFrame(labels[lo:hi])
+        file_codes = pd.DataFrame(labels[lo:hi])
         lo = hi
-        pkl.dump(labels, open(out_dir+"labels_{}.pkl".format(names[i]), "wb"))
+        pkl.dump(file_codes, open(out_dir+"labels_{}.pkl".format(names[i]), "wb"))
     print('Done.')
+
+    if return_inertia is True:
+        return inertia
 
 
 if __name__ == "__main__":
