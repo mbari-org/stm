@@ -30,10 +30,9 @@ def main(in_dir=conf.doc_path, out_dir=conf.model_path,
     :param cell_space: cell width in time dimension
     :param online: run ROST online
     :param online_mint: min time (in ms) to spend between observation time steps
-    :return: path to directory containing topic model CSVs
     """
 
-    model_path = out_dir + "alpha_{}_beta_{}/".format(alpha, beta)
+    model_path = out_dir
     ensure_dir(model_path)
 
     top_mod_cmd = [rost_path +"topics.refine.t",
@@ -97,10 +96,5 @@ def main(in_dir=conf.doc_path, out_dir=conf.model_path,
 
 
 if __name__ == "__main__":
-    alpha = [0.9, 0.5, 0.1, 0.01, 0.001]
-    beta = [0.9, 0.5, 0.1, 0.01, 0.001]
-    for a in alpha:
-        for b in beta:
-            main(alpha=a, beta=b)
-
+    main()
 
