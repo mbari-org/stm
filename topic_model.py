@@ -94,6 +94,10 @@ def main(in_dir=conf.doc_path, out_dir=conf.model_path,
 
     write_csv(theta, model_path + "theta.csv")
 
+    df = pd.read_csv(filepath_or_buffer=model_path + "perplexity.csv",
+                     header=None)
+    print("Perplexity summed over documents = {}".format(df.sum()[1]))
+
 
 if __name__ == "__main__":
     main()

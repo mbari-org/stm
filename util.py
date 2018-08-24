@@ -20,3 +20,8 @@ def execute(cmd):
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
     output, error = process.communicate()
     return output, error
+
+
+def map_range(x, a, b, c=0, d=1):
+    y = (x-a) * (d-c)/(b-a) + c
+    return y

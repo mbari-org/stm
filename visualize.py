@@ -9,103 +9,50 @@ import pandas as pd
 import pickle as pkl
 
 import conf
-
-def read_wav(filepath, verbose=False):
-    if verbose:
-        print('Reading from %s' % filepath)
-    fs, x = wavfile.read(filepath)
-    if verbose:
-        print('Done.')
-    if verbose:
-        print('Sample Rate: %d' % fs)
-        print('Recording Length (s): %f' % (len(x)/fs))
-        print('Number of Samples: %d' % len(x))
-    return fs, x.astype(float)
+from util import map_range
 
 
-def compute_stft(signal, window_size, overlap, db=True):
-    stp = int(window_size*(1-overlap))
-    stft = np.abs(librosa.stft(y = signal, n_fft=window_size, hop_length=stp))
-    if db:
-        stft = librosa.amplitude_to_db(stft, ref=np.max)
-    return stft
+def spectrogram(stft, window_size, overlap, fs,
+                y='linear', freq_subset: tuple = None, c_bar=None):
 
-def normalize(arr):
-    mean = np.mean(arr)
-    std = np.std(arr)
-    normalized = np.divide( np.subtract(arr, mean), std)
-    return normalized
-
-
-def get_subset(stft, rng, freq_range=16000):
-    hz_per_bin = freq_range / len(stft)
-    lo_bin = math.floor(rng[0] / hz_per_bin)
-    hi_bin = math.ceil(rng[1] / hz_per_bin)
-    print('LO %d' % lo_bin)
-    print('HI %d' % hi_bin)
-    return stft[lo_bin:hi_bin + 1]
-
-def topic_bar(model_path=conf.model_path, stft_path=conf.stft_path, target_file=conf.target_file,
-              window_size=conf.window_size, overlap=conf.overlap, fs=conf.sample_rate):
-
-    theta = pd.read_csv(model_path + "theta.csv", header=None).values
-
-    start_t = 17
-    end_t = 66
-
-    words_per_doc = 32
-    secs_per_doc = secs_per_frame * words_per_doc
-    start_doc = math.floor(start_t / secs_per_doc)
-    end_doc = math.ceil(end_t / secs_per_doc)
-
-    real_start_t = secs_per_doc * start_doc
-    real_end_t = secs_per_doc * end_doc
-
-    theta_sub = theta[start_doc: end_doc]
-
-    # spectrogram params
-    fs = 32000
-    window_size = 1024
-    overlap = 0.5
     hop_len = window_size * (1 - overlap)
-    secs_per_frame = window_size * (1 - overlap) / fs
+    display.specshow(stft, y_axis=y, x_axis='time',
+                     sr=fs, hop_length=hop_len)
 
-    # subset of theta
-    theta_sub = theta[start_doc: end_doc]
+    if c_bar is str:
+        plt.colorbar(format="%.2f "+"{}".format(c_bar))
 
-    # barplot params
-    N = len(theta_sub)
+    if freq_subset:
+        hz_per_bin = (fs / 2) / (1 + window_size / 2)
+        locs, labels = plt.yticks()
+        c = hz_per_bin*math.floor(freq_subset[0]/hz_per_bin)
+        d = hz_per_bin*math.ceil(freq_subset[1]/hz_per_bin)
+        new_labels = ["%.2f" % map_range(locs[i], locs[0], locs[-1], c, d) for i in range(len(locs))]
+        plt.yticks(locs, new_labels)
+
+    return plt.gca()
+
+
+def stacked_bar(data, legend: str = None):
+    data_length = len(data)
+    data_height = len(data[0])
     P = []
-    ind = np.arange(N)
-    bottom = np.zeros(len(theta_sub))
+    ind = np.arange(data_length)
+    bottom = np.zeros(len(data))
     width = 1
 
-    fig = plt.figure(figsize=(16, 8))
+    for z in range(data_height):
+        col = [row[z] for row in data]
+        P.append(plt.bar(x=ind, height=col, width=width, bottom=bottom, align='edge'))
+        bottom = np.add(col, bottom)
+    plt.xlim(xmin=0, xmax=len(data))
 
-    start_frame = int(real_start_t * (1 / secs_per_frame))
-    end_frame = int(real_end_t * (1 / secs_per_frame))
+    if legend:
+        plt.legend(tuple(_[0] for _ in P),
+                   ["{} {}".format(legend, i) for i in range(data_height)],
+                   loc='lower right')
 
-    plt.subplot(2, 1, 1)
-    Sxx = pkl.load(open(stft_path+target_file+'.pkl', "rb"))
-    Sxx_sub = Sxx[start_frame:end_frame]
-    Sxx_sub = flip_list(Sxx_sub.values)
-
-    display.specshow(librosa.amplitude_to_db(Sxx_sub, ref=np.max),
-                     y_axis='log', x_axis='time',
-                     sr=32000, hop_length=512)
-
-    plt.subplot(2, 1, 2)
-    for z in range(T):
-        P.append(plt.bar(x=ind, height=theta_sub[:, z], width=width, bottom=bottom))
-        bottom = np.add(theta_sub[:, z], bottom)
-    plt.xlim(xmin=0, xmax=len(theta_sub))
-    plt.legend(tuple(_[0] for _ in P), ['Topic %d' % (i) for i in range(T)], loc='lower right')
-    plt.xlabel("Documents")
-    plt.ylabel("Topic Probability")
-
-    plt.tight_layout()
-    plt.show()
-
+    return plt.gca()
 
 def visualize_preproc():
     wav_file = '/Users/bergamaschi/Documents/HumpbackSong/HBSe_20151207T070326.wav'
@@ -175,3 +122,47 @@ def visualize_preproc():
     plt.title('Normalized')
     plt.tight_layout()
     plt.show()
+
+
+# TODO: Add input checking and option to plot the whole spectrogram
+def main(start_time=17, end_time=66, model_path=conf.model_path, stft_path=conf.stft_path,
+         target_file=conf.target_file, window_size=conf.window_size, overlap=conf.overlap,
+         fs=conf.sample_rate, subset=conf.subset, words_per_doc=conf.words_per_doc):
+
+    theta = pd.read_csv(model_path + "theta.csv", header=None).values
+
+    secs_per_frame = window_size * (1 - overlap) / fs
+
+    secs_per_doc = secs_per_frame * words_per_doc
+    start_doc = math.floor(start_time / secs_per_doc)
+    end_doc = math.ceil(end_time / secs_per_doc)
+
+    real_start_t = secs_per_doc * start_doc
+    real_end_t = secs_per_doc * end_doc
+
+    # subset of theta
+    theta_sub = theta[start_doc: end_doc]
+
+    fig = plt.figure(figsize=(16, 8))
+
+    start_frame = int(real_start_t * (1 / secs_per_frame))
+    end_frame = int(real_end_t * (1 / secs_per_frame))
+
+    plt.subplot(2, 1, 1)
+    stft = pkl.load(open(stft_path+target_file+'.pkl', "rb"))
+    stft_sub = stft[start_frame:end_frame]
+    stft_sub = np.matrix.transpose(stft_sub.values)
+
+    spectrogram(stft_sub, window_size, overlap, fs,
+                freq_subset=subset)
+
+    plt.subplot(2, 1, 2)
+    stacked_bar(theta_sub)
+    plt.xlabel("Documents")
+    plt.ylabel("Topic Probability")
+
+    plt.tight_layout()
+    plt.show()
+
+if __name__ == "__main__":
+    main()

@@ -62,6 +62,9 @@ def main(in_dir=conf.cluster_path, out_dir=conf.doc_path,
         print("Making documents with {} words for {}...".format(words_per_doc, name))
 
         labels = pkl.load(open(filename, "rb"))
+
+        docs = group_docs(words=labels, words_per_doc=words_per_doc, window_size=window_size, overlap=overlap)
+        """
         ms_per_word = int(((window_size / fs) * overlap) * 1000)
         docs = []
 
@@ -77,6 +80,7 @@ def main(in_dir=conf.cluster_path, out_dir=conf.doc_path,
                 j += words_per_doc
             else:
                 j = len(labels)
+        """
 
         write_csv(docs, out_dir + name + ".csv")
 

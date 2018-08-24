@@ -1,3 +1,8 @@
+"""
+This module clusters the FFT frames produced by stft.py to
+produce a code book and code words for quantization.
+"""
+
 import pickle as pkl
 import time
 import numpy as np
@@ -7,27 +12,34 @@ from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster import KMeans
 from sklearn.metrics.pairwise import pairwise_distances
 from sklearn.decomposition import PCA
-from sklearn.metrics import silhouette_score
 
 import conf
 from util import ensure_dir
 
 
-def cluster(data, k, cluster_type=conf.cluster_type):
+def cluster(data, num_clusters, cluster_type=conf.cluster_type):
+    """
+    Cluster the given data into the number of clusters specified by num_clusters.
+
+    :param data: The data to cluster
+    :param num_clusters: the number of clusters
+    :param cluster_type: the clustering method to use. Can be "kmeans" for k means or 'mbk' for minibatch kmeans
+    :returns:
+    """
     if cluster_type is 'mbk':
         # mbk parameters:
         # see this stack overflow for reasoning on chosen reassignment ratio value
         # https://stackoverflow.com/questions/21447351/minibatchkmeans-parameters
         reassignment_ratio = 0
-        batch_size = 10 * k
-        init_size = 3 * k
-        clust = MiniBatchKMeans(n_clusters=k, batch_size=batch_size, init_size=init_size,
-                                 reassignment_ratio=reassignment_ratio)
-        print('Running MiniBatch K-Means with K = {}...'.format(k))
+        batch_size = 10 * num_clusters
+        init_size = 3 * num_clusters
+        clust = MiniBatchKMeans(n_clusters=num_clusters, batch_size=batch_size, init_size=init_size,
+                                reassignment_ratio=reassignment_ratio)
+        print('Running MiniBatch K-Means with K = {}...'.format(num_clusters))
 
     elif cluster_type is 'kmeans':
-        clust = KMeans(n_clusters=k)
-        print('Running K-Means with K = {}...'.format(k))
+        clust = KMeans(n_clusters=num_clusters)
+        print('Running K-Means with K = {}...'.format(num_clusters))
 
     else:
         raise IOError("Invalid cluster_type. Use cluster_type=\'kmeans\' for kmeans or"
@@ -37,6 +49,7 @@ def cluster(data, k, cluster_type=conf.cluster_type):
     clust.fit(data)
     print('Fit in %s seconds' % (time.time() - t0))
     return clust.cluster_centers_, clust.labels_, clust.inertia_
+
 
 # TODO: Quantize docstring
 def quantize(data, code_book):

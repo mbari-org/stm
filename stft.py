@@ -1,3 +1,8 @@
+"""
+This module computes spectrograms from given wav files that
+are preprocessed in the manner specified by conf.py
+"""
+
 from scipy.io import wavfile
 import math
 import pandas as pd
@@ -15,11 +20,11 @@ from util import ensure_dir
 
 def read_wav(fpath, verbose=False):
     """
-    Read a .wav file and return the signal and sample rate.
+    Reads a .wav file and return the signal and sample rate.
+
     :param fpath: file path of .wav file
     :param verbose: if true, read_wav prints information about the .wav
-    :return fs: sample rate of the .wav
-    :return signal: signal read from the .wav
+    :returns: the tuple (fs, x) where fs is the sample rate and x is the data read
     """
     if verbose:
         print('Reading from %s' % fpath)
@@ -32,26 +37,29 @@ def read_wav(fpath, verbose=False):
     return fs, signal.astype(float)
 
 
-def compute_stft(signal, window_size, overlap):
+def compute_stft(signal, window_size, overlap, power=False):
     """
     Compute the spectrogram of the signal.
+
     :param signal: signal to compute spectrogram from
     :param window_size: number of samples per FFT
     :param overlap: overlap of each window
-    :return stft: the computed spectrogram
+    :param power: if power=True, the power spectrum is returned
+    :returns: the computed spectrogram
     """
     stp = int(window_size * (1 - overlap))
-    # divide by window_size to convert to amplitude
-    stft = np.divide(np.abs(librosa.stft(y=signal, n_fft=window_size, hop_length=stp)),
-                     window_size)
+    stft = np.abs(librosa.stft(y=signal, n_fft=window_size, hop_length=stp))
+    if power:
+        stft=librosa.amplitude_to_db(stft, ref=np.max)
     return stft
 
 
-def normalize(stft):
+def normalize_stft(stft):
     """
     Convert a spectrogram to units of standard deviation by computing the mean and standard deviation
     over all values in the spectrogram, then subtracting the mean and dividing by the standard deviation
     for each value.
+
     :param stft: spectrogram to normalize
     :return normalized: the normalized spectrogram
     """
@@ -65,10 +73,11 @@ def normalize(stft):
 def get_subset(stft, rng, fs=32000):
     """
     Get the subset of spectrogram frequency bins that contain frequencies within the given range.
+
     :param stft: spectrogram to subset
     :param rng: frequency range
     :param fs: sample rate of the signal from which the stft was computed
-    :return subsetted: the subsetted spectrogram
+    :returns: the subsetted spectrogram
     """
     freq_range = fs/2
     hz_per_bin = freq_range / len(stft)
@@ -81,8 +90,9 @@ def get_subset(stft, rng, fs=32000):
 def stft_to_dataframe(stft):
     """
     Converts numpy spectrogram to Pandas DataFrame.
-    :param stft:
-    :return:
+
+    :param stft: the numpy spectrogram
+    :returns: stft as a Pandas DataFrame where indexes are timesteps and columns are frequency bins
     """
     dic = OrderedDict()
     for i in range(len(stft)):
@@ -91,12 +101,15 @@ def stft_to_dataframe(stft):
 
 
 def main(in_dir=conf.wav_path, out_dir=conf.stft_path,
-         window_size=conf.window_size, overlap=conf.overlap, subset=conf.subset):
+         window_size=conf.window_size, overlap=conf.overlap, subset=conf.subset,
+         sigma=conf.sigma, normalize=conf.normalize):
 
-    # input and output directories
+    # Check that input and output directories exist,
+    # if not, make them.
     ensure_dir(out_dir)
 
-    # file number and time variables
+    # Declare file number and timer variables for
+    # keeping track of run time and dataset statistics.
     num_files = 0
     total_song_length = 0
     read_time = 0
@@ -104,14 +117,14 @@ def main(in_dir=conf.wav_path, out_dir=conf.stft_path,
     df_conv_time = 0
     pkl_time = 0
 
-    # for all songs in song_dir
+    # Preprocess all wav files in the directory specified by in_dir.
     for filename in glob.glob(in_dir + '*.wav'):
 
         num_files += 1
         print('FILE NAME %s' % filename)
         print('FILE NUMBER %d' % num_files)
 
-        # read wav and save song name
+        # Read wav and store the filename without it's stem.
         print('Reading file...')
         t_0 = time.time()
         name = filename.split('/')[-1]
@@ -122,27 +135,32 @@ def main(in_dir=conf.wav_path, out_dir=conf.stft_path,
         read_time += (t_1 - t_0)
         print('Done. (%f seconds)' % (t_1 - t_0))
 
-        # compute spectrogram
+        # Compute spectrogram and return the
+        # frequency range specified by subset if
+        # one has been passed.
         print('Computing spectrogram...')
         t_0 = time.time()
-        stft = compute_stft(x, window_size, overlap)
+        stft = compute_stft(x, window_size, overlap, power=conf.power)
         if type(subset) == tuple:
             stft = get_subset(stft, subset, fs=fs)
         t_1 = time.time()
         fft_time += (t_1 - t_0)
         print('Done. (%f seconds)' % (t_1 - t_0))
 
-        # TODO: add gaussian filter timer
-        # gaussian filter
-        print('Gaussian filtering...')
-        stft = gaussian_filter(stft, sigma=2)
-        print('Done.')
+        # Apply Gaussian filter if sigma is specified.
+        if sigma is not None:
+            print('Gaussian filter with sigma={}...'.format(sigma))
+            stft = gaussian_filter(stft, sigma=sigma)
+            print('Done.')
 
-        print('Normalizing...')
-        stft = normalize(stft)
-        print('Done.')
+        # Normalize the spectrogram if normalize is true.
+        if normalize is True:
+            print('Normalizing...')
+            stft = normalize_stft(stft)
+            print('Done.')
 
-        # convert to dataframe
+        # Convert the spectrogram from ndarray to DataFrame
+        # with timestep indexes and frequency bin columns.
         print('Converting to dataframe...')
         t_0 = time.time()
         df = stft_to_dataframe(stft)
@@ -150,7 +168,8 @@ def main(in_dir=conf.wav_path, out_dir=conf.stft_path,
         df_conv_time += (t_1 - t_0)
         print('Done. (%f seconds)' % (t_1 - t_0))
 
-        # dump dataframe as .pkl
+        # Dump the dataframe as a Pickle to the directory
+        # specified by out_dir.
         print('Pickling...')
         t_0 = time.time()
         pkl.dump(df, open(out_dir + name + '.pkl', "wb"))
@@ -158,6 +177,8 @@ def main(in_dir=conf.wav_path, out_dir=conf.stft_path,
         pkl_time += (t_1 - t_0)
         print('Done. (%f seconds)' % (t_1 - t_0))
 
+    # Report that preprocessing has been completed and
+    # output runtime and dataset statistics.
     print('FINISHED ALL %d FILES!' % num_files)
     print('--Read Time--')
     print('Total: %f seconds' % read_time)
