@@ -36,3 +36,5 @@ each is dependant on the output of the last.
 * If visualize.py raises an error saying that Python was not installed as a framework, try the 
 solution [here](https://stackoverflow.com/questions/29433824/unable-to-import-matplotlib-pyplot-as-plt-in-virtualenv)
 
+## References
+* ROST: https://gitlab.com/warplab/rost-cli

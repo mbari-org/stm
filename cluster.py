@@ -122,10 +122,11 @@ def main(in_dir=conf.stft_path, out_dir=conf.cluster_path,
     print('Total data points loaded: %d' % len(data))
 
     # whiten FFT frames before clustering
-    print('Whitening...')
-    t0 = time.time()
-    data = whiten(data, whiten_type='pca')
-    print("Done. (%f seconds)" % (time.time() - t0))
+    if conf.whiten is not None:
+        print('Whitening...')
+        t0 = time.time()
+        data = whiten(data, whiten_type=conf.whiten)
+        print("Done. (%f seconds)" % (time.time() - t0))
 
     # ===>Clustering<===
 

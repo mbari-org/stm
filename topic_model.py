@@ -96,7 +96,7 @@ def main(in_dir=conf.doc_path, out_dir=conf.model_path,
 
     df = pd.read_csv(filepath_or_buffer=model_path + "perplexity.csv",
                      header=None)
-    print("Perplexity summed over documents = {}".format(df.sum()[1]))
+    print("Avg Per Doc Perplexity = {}".format( (df.sum()[1])/len(df) ))
 
 
 if __name__ == "__main__":

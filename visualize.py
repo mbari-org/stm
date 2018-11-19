@@ -10,6 +10,7 @@ import pickle as pkl
 
 import conf
 from util import map_range
+from stft import read_wav, compute_stft, get_subset, normalize_stft
 
 
 def spectrogram(stft, window_size, overlap, fs,
@@ -49,26 +50,26 @@ def stacked_bar(data, legend: str = None):
 
     if legend:
         plt.legend(tuple(_[0] for _ in P),
-                   ["{} {}".format(legend, i) for i in range(data_height)],
+                   ["{}{}".format(legend, i) for i in range(data_height)],
                    loc='lower right')
 
     return plt.gca()
 
 def visualize_preproc():
-    wav_file = '/Users/bergamaschi/Documents/HumpbackSong/HBSe_20151207T070326.wav'
+    wav_file = '/Users/thomasbergamaschi/Code/hb-song-analysis/dataset/HBSe_20151207T070326.wav'
 
     fs, x = read_wav(wav_file, verbose=True)
 
     fs = 32000
-    window_size = 1024
-    ovr = 0.5
+    window_size = 4096
+    ovr = 0.9
     hop_len = window_size*(1-ovr)
     subset = (50, 2000)
     hz_per_bin = (fs/2) / (1+window_size/2)
 
 
     # Waveform
-    fig = plt.figure(figsize=(12, 4))
+    fig = plt.figure(figsize=(10, 3))
     display.waveplot(x, sr=fs)
     plt.title('Waveform (30 kHz Sample Rate)')
     plt.tight_layout()
@@ -76,17 +77,18 @@ def visualize_preproc():
 
 
     # Spectrogram
-    fig = plt.figure(figsize=(12, 4))
+    fig = plt.figure(figsize=(12, 3))
     stft = compute_stft(x, window_size, ovr)
+    stft = librosa.amplitude_to_db(stft, ref=np.max)
     display.specshow(stft, y_axis='linear', x_axis='time', sr=fs)
     plt.colorbar(format='%+2.0f dB')
-    plt.title('Spectrogram (1024 Window, 50% Overlap)')
+    plt.title('Spectrogram ({} Window, {} Overlap)'.format(window_size, ovr))
     plt.tight_layout()
     plt.show()
 
 
     # Subsetted Spectrogram
-    fig = plt.figure(figsize=(12, 4))
+    fig = plt.figure(figsize=(12, 3))
     stft = get_subset(stft, rng=(50, 2000))
     display.specshow(stft, y_axis='linear', x_axis='time', sr=fs)
     plt.colorbar(format='%+2.0f dB')
@@ -99,7 +101,7 @@ def visualize_preproc():
 
 
     # Gaussian Filtering
-    fig = plt.figure(figsize=(12, 4))
+    fig = plt.figure(figsize=(12, 3))
     blurred = gaussian_filter(stft, sigma=2)
     display.specshow(blurred, y_axis='linear', x_axis='time', sr=fs)
     plt.colorbar(format='%+2.0f dB')
@@ -112,10 +114,10 @@ def visualize_preproc():
 
 
     # Normalization
-    fig = plt.figure(figsize=(12, 4))
-    normal = normalize(blurred)
+    fig = plt.figure(figsize=(12, 3))
+    normal = normalize_stft(blurred)
     display.specshow(normal, y_axis='linear', x_axis='time', sr=fs)
-    plt.colorbar(format='%+2.0f Standard Deviations')
+    plt.colorbar(format='%+2.0f std')
     locs, labels = plt.yticks()
     new_labels = ["%.2f"%(hz_per_bin+((locs[i]/16000)*len(stft)*hz_per_bin)) for i in range(len(locs))]
     plt.yticks(locs, new_labels)
@@ -125,39 +127,37 @@ def visualize_preproc():
 
 
 # TODO: Add input checking and option to plot the whole spectrogram
-def main(start_time=17, end_time=66, model_path=conf.model_path, stft_path=conf.stft_path,
+def main(times=conf.times, model_path=conf.model_path, stft_path=conf.stft_path,
          target_file=conf.target_file, window_size=conf.window_size, overlap=conf.overlap,
          fs=conf.sample_rate, subset=conf.subset, words_per_doc=conf.words_per_doc):
 
     theta = pd.read_csv(model_path + "theta.csv", header=None).values
+    stft = pkl.load(open(stft_path+target_file+'.pkl', "rb"))
 
     secs_per_frame = window_size * (1 - overlap) / fs
-
     secs_per_doc = secs_per_frame * words_per_doc
-    start_doc = math.floor(start_time / secs_per_doc)
-    end_doc = math.ceil(end_time / secs_per_doc)
 
-    real_start_t = secs_per_doc * start_doc
-    real_end_t = secs_per_doc * end_doc
+    if times is not None:
+        start_doc = math.floor(times[0] / secs_per_doc)
+        end_doc = math.ceil(times[1] / secs_per_doc)
+        real_start_t = secs_per_doc * start_doc
+        real_end_t = secs_per_doc * end_doc
+        theta = theta[start_doc: end_doc]
 
-    # subset of theta
-    theta_sub = theta[start_doc: end_doc]
+        start_frame = int(real_start_t * (1 / secs_per_frame))
+        end_frame = int(real_end_t * (1 / secs_per_frame))
+        stft = stft[start_frame:end_frame]
+
+    stft = np.matrix.transpose(stft.values)
 
     fig = plt.figure(figsize=(16, 8))
 
-    start_frame = int(real_start_t * (1 / secs_per_frame))
-    end_frame = int(real_end_t * (1 / secs_per_frame))
-
     plt.subplot(2, 1, 1)
-    stft = pkl.load(open(stft_path+target_file+'.pkl', "rb"))
-    stft_sub = stft[start_frame:end_frame]
-    stft_sub = np.matrix.transpose(stft_sub.values)
-
-    spectrogram(stft_sub, window_size, overlap, fs,
+    spectrogram(stft, window_size, overlap, fs,
                 freq_subset=subset)
 
     plt.subplot(2, 1, 2)
-    stacked_bar(theta_sub)
+    stacked_bar(theta, legend="T")
     plt.xlabel("Documents")
     plt.ylabel("Topic Probability")
 

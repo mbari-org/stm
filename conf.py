@@ -1,38 +1,40 @@
 # file/directory paths
-wav_path = "/Users/bergamaschi/Documents/HumpbackSong/dataset/test/"
-out_dir = "./out/"
+wav_path = "./dataset/"
+rost_path = "/Users/thomasbergamaschi/Repos/rost-cli/bin/"
+out_dir = "/Users/thomasbergamaschi/Code/hb-song-analysis/out/"
+stft_path = out_dir+"stft/"
+cluster_path = out_dir+"cluster/"
+doc_path = out_dir+"docs/"
+target_file = "HBSe_20151207T070326"
+model_path = out_dir+"model/"
 
 # spectrogram parameters
-window_size = 4096
-overlap = 0.9
+window_size = 1024
+overlap = 0.5
 sample_rate = 32000
-power = False
+power = True
 subset = (50, 2000)
 sigma = 2
 normalize = True
-stft_path = out_dir+"stft/"
 
 # clustering parameters
 vocab_size = 1000
+whiten = None  # 'pca', 'std', or None
 cluster_type = 'mbk'
-cluster_path = out_dir+"cluster/"
 
 # doc parameters
-words_per_doc = 30
-doc_path = out_dir+"docs/"
+words_per_doc = 32
 
 # model parameters
-target_file = "HBSe_20151207T070326"
-
-num_topics = 5
+num_topics = 10
 alpha = 0.01
-beta = 0.0001
-g_time = 10
+beta = 0.1
+g_time = 2
 cell_space = 0
 threads = 4
 
 online = False
 online_mint = 5
 
-model_path = out_dir+"model/"
-rost_path = "/Users/bergamaschi/rost-cli/bin/"
+# visualization parameters
+times = (16, 77)

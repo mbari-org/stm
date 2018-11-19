@@ -64,23 +64,23 @@ def main(in_dir=conf.cluster_path, out_dir=conf.doc_path,
         labels = pkl.load(open(filename, "rb"))
 
         docs = group_docs(words=labels, words_per_doc=words_per_doc, window_size=window_size, overlap=overlap)
-        """
-        ms_per_word = int(((window_size / fs) * overlap) * 1000)
-        docs = []
 
-        i = 0
-        j = words_per_doc
-        while i < len(labels):
-            timestamp = j*ms_per_word
-            d = [timestamp]
-            d.extend(labels[0].values[i:j])
-            docs.append(d)
-            i += words_per_doc
-            if (j+words_per_doc) <= len(labels):
-                j += words_per_doc
-            else:
-                j = len(labels)
-        """
+        # ms_per_word = int(((window_size / fs) * overlap) * 1000)
+        # docs = []
+        #
+        # i = 0
+        # j = words_per_doc
+        # while i < len(labels):
+        #     timestamp = j*ms_per_word
+        #     d = [timestamp]
+        #     d.extend(labels[0].values[i:j])
+        #     docs.append(d)
+        #     i += words_per_doc
+        #     if (j+words_per_doc) <= len(labels):
+        #         j += words_per_doc
+        #     else:
+        #         j = len(labels)
+        #
 
         write_csv(docs, out_dir + name + ".csv")
 
