@@ -1,18 +1,57 @@
-# stm:  Sound Topic Modeling for Humpback Whale Song
+# 🎵 STM: Sound Topic Modeling
+Largely based on the excellent work in [hb-song-analysis](https://github.com/tbergama/hb-song-analysis)
 
-Largely based on [hb-song-analysis](https://github.com/tbergama/hb-song-analysis) work.
+##  Getting Up and Running
 
-## Getting Up and Running
-### Compatability
-Please note that currently this project is not compatible with Windows operating systems.
-### Installing ROST
-This project wraps the Realtime Online Spatiotemporal Topic Modeling (ROST) library from WHOI's WARPLab.
-In order to run this project you will need to clone their [repository](https://gitlab.com/warplab/rost-cli) and follow
-the installation instructions found in their README.  
+🐳 Option 1: ROST via Docker (Recommended)
+
+Build the Docker image from the project root:
+
+```shell
+docker build -t rost-cli -f DockerfileROST .
+```
+
+Then run the container to test with the `topics.refine.t` command:
+
+```shell
+docker run -it --rm -v rost-cli topics.refine.t --help
+```
+
+You should see the help message for the `topics.refine.t` command, which indicates that the ROST CLI is working correctly.
+```text
+(venv) docker run -it --rm rost-cli topics.refine.t --help                                                                                                                                                                                                                 (stm) 12:35:46
+Topic modeling of data with 1 dimensional structure.:
+  --help                                help
+  -i [ --in.words ] arg (=/dev/stdin)   Word frequency count file. Each line is
+                                        a document/cell, with integer 
+                                        representation of words. 
+  --in.words.delim arg (=,)             delimiter used to seperate words.
+  --out.topics arg (=topics.csv)        Output topics file
+  --out.topics.ml arg (=topics.maxlikelihood.csv)
+                                        Output maximum likelihood topics file
+  --out.topicmodel arg (=topicmodel.csv)
+                                        Output topic model file
+  --in.topicmodel arg                   Input topic model file
+  --in.topics arg                       Initial topic labels
+
+```
+
+#### Option 2: ROST Local
+Clone the [repository](https://gitlab.com/warplab/rost-cli) 
+
+```shell
+git clone https://gitlab.com/warplab/rost-cli
+```
+
+and follow the installation instructions found in their README.
+
 Once ROST is installed, change the `rost_path` variable in conf.py to be the path to /rost-cli/bin/ directory
 on your machine.
+
 ### Installing Python Dependencies
-Install with your package manager of choice.  
+
+Install with the package manager your prefer.
+
 With conda,
 ```shell
 conda env create

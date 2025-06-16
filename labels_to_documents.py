@@ -1,10 +1,8 @@
 import pickle as pkl
-import glob
 import numpy as np
 
 import conf
 from util import write_csv
-from util import ensure_dir
 
 
 def group_docs(words, words_per_doc, window_size, overlap, start_t=0, fs=32000):
@@ -47,23 +45,30 @@ def label_docs(doc_times, event_times, event_labels):
 
     return doc_labels
 
+def main(
+    in_dir=conf.cluster_path,
+    out_dir=conf.doc_path,
+    words_per_doc=conf.words_per_doc,
+    window_size=conf.window_size,
+    overlap=conf.overlap,
+    fs=32000
+):
+    out_dir.mkdir(parents=True, exist_ok=True)
 
-def main(in_dir=conf.cluster_path, out_dir=conf.doc_path,
-         words_per_doc=conf.words_per_doc, window_size=conf.window_size, overlap=conf.overlap, fs=32000):
+    for filename in in_dir.glob('labels_*.pkl'):
+        name = filename.name.split('.')[0]
+        name = name.split('_')[-2] + '_' + name.split('_')[-1]
 
-    ensure_dir(out_dir)
-
-    for filename in glob.glob(in_dir + 'labels_*.pkl'):
-
-        name = filename.split('/')[-1]
-        name = name.split('.')[0]
-        name = name.split('_')[-2]+'_'+name.split('_')[-1]
-
-        print("Making documents with {} words for {}...".format(words_per_doc, name))
+        print(f"Making documents with {words_per_doc} words for {name}...")
 
         labels = pkl.load(open(filename, "rb"))
 
-        docs = group_docs(words=labels, words_per_doc=words_per_doc, window_size=window_size, overlap=overlap)
+        docs = group_docs(
+            words=labels,
+            words_per_doc=words_per_doc,
+            window_size=window_size,
+            overlap=overlap
+        )
 
         # ms_per_word = int(((window_size / fs) * overlap) * 1000)
         # docs = []
@@ -82,10 +87,9 @@ def main(in_dir=conf.cluster_path, out_dir=conf.doc_path,
         #         j = len(labels)
         #
 
-        write_csv(docs, out_dir + name + ".csv")
+        write_csv(docs, str(out_dir / f"{name}.csv"))
 
         print('Done.')
-
 
 if __name__ == "__main__":
     main()

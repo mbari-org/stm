@@ -1,0 +1,31 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV ROSTPATH=/share/rost
+ENV PATH="/app/rost-cli/bin:$PATH"
+
+RUN apt-get update && apt-get install -y \
+    git \
+    cmake \
+    build-essential \
+    libboost-all-dev \
+    libflann-dev \
+    libfftw3-dev \
+    libopencv-dev \
+    libsndfile1-dev \
+    libgstreamer-plugins-base1.0-dev \
+    libgstreamer1.0-0 \
+    python3-pip && \
+    pip3 install pysrt && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+
+WORKDIR /app
+
+# Clone and build rost-cli
+RUN git clone https://gitlab.com/warplab/rost-cli.git && \
+    cd rost-cli && \
+    mkdir build && cd build && \
+    cmake .. && \
+    make -j4 && \
+    make install

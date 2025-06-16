@@ -1,4 +1,3 @@
-from scipy.io import wavfile
 from scipy.ndimage import gaussian_filter
 import librosa
 from librosa import display
@@ -20,15 +19,15 @@ def spectrogram(stft, window_size, overlap, fs,
     display.specshow(stft, y_axis=y, x_axis='time',
                      sr=fs, hop_length=hop_len)
 
-    if c_bar is str:
-        plt.colorbar(format="%.2f "+"{}".format(c_bar))
+    if isinstance(c_bar, str):
+        plt.colorbar(format=f"%.2f {c_bar}")
 
     if freq_subset:
         hz_per_bin = (fs / 2) / (1 + window_size / 2)
         locs, labels = plt.yticks()
-        c = hz_per_bin*math.floor(freq_subset[0]/hz_per_bin)
-        d = hz_per_bin*math.ceil(freq_subset[1]/hz_per_bin)
-        new_labels = ["%.2f" % map_range(locs[i], locs[0], locs[-1], c, d) for i in range(len(locs))]
+        c = hz_per_bin * math.floor(freq_subset[0] / hz_per_bin)
+        d = hz_per_bin * math.ceil(freq_subset[1] / hz_per_bin)
+        new_labels = [f"{map_range(locs[i], locs[0], locs[-1], c, d):.2f}" for i in range(len(locs))]
         plt.yticks(locs, new_labels)
 
     return plt.gca()
@@ -50,7 +49,7 @@ def stacked_bar(data, legend: str = None):
 
     if legend:
         plt.legend(tuple(_[0] for _ in P),
-                   ["{}{}".format(legend, i) for i in range(data_height)],
+                   [f"{legend}{i}" for i in range(data_height)],
                    loc='lower right')
 
     return plt.gca()
@@ -63,10 +62,9 @@ def visualize_preproc():
     fs = 32000
     window_size = 4096
     ovr = 0.9
-    hop_len = window_size*(1-ovr)
+    hop_len = window_size * (1 - ovr)
     subset = (50, 2000)
-    hz_per_bin = (fs/2) / (1+window_size/2)
-
+    hz_per_bin = (fs / 2) / (1 + window_size / 2)
 
     # Waveform
     fig = plt.figure(figsize=(10, 3))
@@ -75,17 +73,15 @@ def visualize_preproc():
     plt.tight_layout()
     plt.show()
 
-
     # Spectrogram
     fig = plt.figure(figsize=(12, 3))
     stft = compute_stft(x, window_size, ovr)
     stft = librosa.amplitude_to_db(stft, ref=np.max)
     display.specshow(stft, y_axis='linear', x_axis='time', sr=fs)
     plt.colorbar(format='%+2.0f dB')
-    plt.title('Spectrogram ({} Window, {} Overlap)'.format(window_size, ovr))
+    plt.title(f'Spectrogram ({window_size} Window, {ovr} Overlap)')
     plt.tight_layout()
     plt.show()
-
 
     # Subsetted Spectrogram
     fig = plt.figure(figsize=(12, 3))
@@ -93,12 +89,11 @@ def visualize_preproc():
     display.specshow(stft, y_axis='linear', x_axis='time', sr=fs)
     plt.colorbar(format='%+2.0f dB')
     locs, labels = plt.yticks()
-    new_labels = ["%.2f"%(hz_per_bin+((locs[i]/16000)*len(stft)*hz_per_bin)) for i in range(len(locs))]
+    new_labels = [f"{hz_per_bin + ((locs[i] / 16000) * len(stft) * hz_per_bin):.2f}" for i in range(len(locs))]
     plt.yticks(locs, new_labels)
     plt.title('Spectrogram (50Hz to 2kHz Subset)')
     plt.tight_layout()
     plt.show()
-
 
     # Gaussian Filtering
     fig = plt.figure(figsize=(12, 3))
@@ -106,12 +101,11 @@ def visualize_preproc():
     display.specshow(blurred, y_axis='linear', x_axis='time', sr=fs)
     plt.colorbar(format='%+2.0f dB')
     locs, labels = plt.yticks()
-    new_labels = ["%.2f"%(hz_per_bin+((locs[i]/16000)*len(stft)*hz_per_bin)) for i in range(len(locs))]
+    new_labels = [f"{hz_per_bin + ((locs[i] / 16000) * len(stft) * hz_per_bin):.2f}" for i in range(len(locs))]
     plt.yticks(locs, new_labels)
     plt.title('Gaussian Filter (sigma=2)')
     plt.tight_layout()
     plt.show()
-
 
     # Normalization
     fig = plt.figure(figsize=(12, 3))
@@ -119,7 +113,7 @@ def visualize_preproc():
     display.specshow(normal, y_axis='linear', x_axis='time', sr=fs)
     plt.colorbar(format='%+2.0f std')
     locs, labels = plt.yticks()
-    new_labels = ["%.2f"%(hz_per_bin+((locs[i]/16000)*len(stft)*hz_per_bin)) for i in range(len(locs))]
+    new_labels = [f"{hz_per_bin + ((locs[i] / 16000) * len(stft) * hz_per_bin):.2f}" for i in range(len(locs))]
     plt.yticks(locs, new_labels)
     plt.title('Normalized')
     plt.tight_layout()
@@ -131,8 +125,8 @@ def main(times=conf.times, model_path=conf.model_path, stft_path=conf.stft_path,
          target_file=conf.target_file, window_size=conf.window_size, overlap=conf.overlap,
          fs=conf.sample_rate, subset=conf.subset, words_per_doc=conf.words_per_doc):
 
-    theta = pd.read_csv(model_path + "theta.csv", header=None).values
-    stft = pkl.load(open(stft_path+target_file+'.pkl', "rb"))
+    theta = pd.read_csv(model_path / "theta.csv", header=None).values
+    stft = pkl.load(open(stft_path / f'{target_file}.pkl', "rb"))
 
     secs_per_frame = window_size * (1 - overlap) / fs
     secs_per_doc = secs_per_frame * words_per_doc

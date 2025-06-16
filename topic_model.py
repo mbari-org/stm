@@ -1,9 +1,10 @@
+from pathlib import Path
+
 import pandas as pd
 import numpy as np
 
 import conf
 from util import execute
-from util import ensure_dir
 from util import write_csv
 
 
@@ -16,7 +17,6 @@ def main(in_dir=conf.doc_path, out_dir=conf.model_path,
     # TODO: Add chinese restaurant process option
 
     """
-
     :param in_dir: directory containing document CSV
     :param rost_path: path to ROST executables
     :param model_path: path to directory where model output should be saved
@@ -32,16 +32,16 @@ def main(in_dir=conf.doc_path, out_dir=conf.model_path,
     :param online_mint: min time (in ms) to spend between observation time steps
     """
 
-    model_path = out_dir
-    ensure_dir(model_path)
+    model_path = Path(out_dir)
+    model_path.mkdir(parents=True, exist_ok=True)
 
-    top_mod_cmd = [rost_path +"topics.refine.t",
-                   "-i", in_dir + target_file + ".csv",
-                   "--out.topics=" + model_path + "topics.csv",
-                   "--out.topics.ml=" + model_path + "topics.maxlikelihood.csv",
-                   "--out.topicmodel=" + model_path + "topicmodel.csv",
-                   "--ppx.out=" + model_path + "perplexity.csv",
-                   "--logfile=" + model_path + "topics.log",
+    top_mod_cmd = ["topics.refine.t",
+                   "-i", str(in_dir / f"{target_file}.csv"),
+                   "--out.topics=" + str(model_path / "topics.csv"),
+                   "--out.topics.ml=" + str(model_path / "topics.maxlikelihood.csv"),
+                   "--out.topicmodel=" + str(model_path / "topicmodel.csv"),
+                   "--ppx.out=" + str(model_path / "perplexity.csv"),
+                   "--logfile=" + str(model_path / "topics.log"),
                    "-V", str(W),
                    "-K", str(T),
                    "--alpha=" + str(alpha),
@@ -51,54 +51,48 @@ def main(in_dir=conf.doc_path, out_dir=conf.model_path,
                    "--cell.space=" + str(cell_space)]
 
     if online:
-        top_mod_cmd.extend(["--online",
-                            "--out.topics.online=" + model_path + "topics.online.csv",
-                            "--out.ppx.online=" + model_path + "perplexity.online.csv",
-                            "--online.mint", str(online_mint)])
+        top_mod_cmd.extend([
+            "words.bincount",
+            "--online",
+            "--out.topics.online=" + str(model_path / "topics.online.csv"),
+            "--out.ppx.online=" + str(model_path / "perplexity.online.csv"),
+            "--online.mint", str(online_mint)
+        ])
 
-    bin_cnt_cmd = [rost_path +"words.bincount",
-                   "-i", model_path + "topics.maxlikelihood.csv",
-                   "-o", model_path + "topics.hist.csv",
+    bin_cnt_cmd = ["-i", str(model_path / "topics.maxlikelihood.csv"),
+                   "-o", str(model_path / "topics.hist.csv"),
                    "-V", str(T)]
 
-    print(top_mod_cmd)
-    print(bin_cnt_cmd)
+    if conf.use_docker:
+        execute(top_mod_cmd, volume_mount=conf.model_path.parent, use_docker=True)
+    else:
+        execute(rost_path + top_mod_cmd)
+        execute(rost_path + bin_cnt_cmd)
 
-    execute(top_mod_cmd)
-    execute(bin_cnt_cmd)
+    topic_model = pd.read_csv(model_path / "topicmodel.csv", header=None).values
+    topic_hist = pd.read_csv(model_path / "topics.csv", header=None).drop(0, axis=1).values
 
-    topic_model = pd.read_csv(model_path + "topicmodel.csv", header=None).values
-    topic_hist = pd.read_csv(model_path + "topics.hist.csv", header=None).drop(0, axis=1).values
-
-    # TODO: make compute_phi function
-    # ===>compute phi<===
     phi = np.zeros((T, W))
-
     for z in range(T):
         denominator = np.sum(topic_model[z]) + (W * beta)
         for w in range(W):
             numerator = topic_model[z][w] + beta
             phi[z][w] = numerator / denominator
-    write_csv(phi, model_path + "phi.csv")
+    write_csv(phi, model_path / "phi.csv")
 
-    # TODO: make compute_theta function
-    # ===>compute theta<===
-    D = len(topic_hist)  # number of documents
+    D = len(topic_hist)
     theta = np.zeros((D, T))
-
     for d in range(D):
         denominator = np.sum(topic_hist[d]) + (T * alpha)
         for z in range(T):
             numerator = topic_hist[d][z] + alpha
             theta[d][z] = numerator / denominator
 
-    write_csv(theta, model_path + "theta.csv")
+    write_csv(theta, model_path / "theta.csv")
 
-    df = pd.read_csv(filepath_or_buffer=model_path + "perplexity.csv",
-                     header=None)
-    print("Avg Per Doc Perplexity = {}".format( (df.sum()[1])/len(df) ))
+    df = pd.read_csv(model_path / "perplexity.csv", header=None)
+    print(f"Avg Per Doc Perplexity = {df.sum()[1] / len(df)}")
 
 
 if __name__ == "__main__":
     main()
-

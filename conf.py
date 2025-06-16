@@ -1,12 +1,16 @@
+from pathlib import Path
+
 # file/directory paths
-wav_path = "./dataset/"
-rost_path = "/Users/thomasbergamaschi/Repos/rost-cli/bin/"
-out_dir = "/Users/thomasbergamaschi/Code/hb-song-analysis/out/"
-stft_path = out_dir+"stft/"
-cluster_path = out_dir+"cluster/"
-doc_path = out_dir+"docs/"
+wav_path = Path.cwd() / "dataset"
+rost_path = "./rost-cli/bin/"
+use_docker = True # Set to False if using local installation with rost_path
+rost_docker_image = "rost-cli:latest"
+out_dir = Path.cwd() / "output"
+stft_path = out_dir / "stft/"
+cluster_path = out_dir / "cluster/"
+doc_path = out_dir / "docs"
 target_file = "HBSe_20151207T070326"
-model_path = out_dir+"model/"
+model_path = out_dir / "model"
 
 # spectrogram parameters
 window_size = 1024

@@ -2,12 +2,10 @@
 This module computes spectrograms from given wav files that
 are preprocessed in the manner specified by conf.py
 """
-
 from scipy.io import wavfile
 import math
 import pandas as pd
 import pickle as pkl
-import glob
 import librosa
 from collections import OrderedDict
 import time
@@ -15,7 +13,6 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 
 import conf
-from util import ensure_dir
 
 
 def read_wav(fpath, verbose=False):
@@ -77,7 +74,7 @@ def get_subset(stft, rng, fs=32000):
     :param stft: spectrogram to subset
     :param rng: frequency range
     :param fs: sample rate of the signal from which the stft was computed
-    :returns: the subsetted spectrogram
+    :returns: the subset spectrogram
     """
     freq_range = fs/2
     hz_per_bin = freq_range / len(stft)
@@ -106,7 +103,7 @@ def main(in_dir=conf.wav_path, out_dir=conf.stft_path,
 
     # Check that input and output directories exist,
     # if not, make them.
-    ensure_dir(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
 
     # Declare file number and timer variables for
     # keeping track of run time and dataset statistics.
@@ -118,17 +115,16 @@ def main(in_dir=conf.wav_path, out_dir=conf.stft_path,
     pkl_time = 0
 
     # Preprocess all wav files in the directory specified by in_dir.
-    for filename in glob.glob(in_dir + '*.wav'):
+    for filename in in_dir.rglob('*.wav'):
 
         num_files += 1
         print('FILE NAME %s' % filename)
         print('FILE NUMBER %d' % num_files)
 
-        # Read wav and store the filename without it's stem.
+        # Read wav and store the filename without its stem.
         print('Reading file...')
         t_0 = time.time()
-        name = filename.split('/')[-1]
-        name = name.split('.')[0]
+        name = filename.stem
         fs, x = read_wav(filename, verbose=False)
         total_song_length += len(x) / fs
         t_1 = time.time()
@@ -172,7 +168,7 @@ def main(in_dir=conf.wav_path, out_dir=conf.stft_path,
         # specified by out_dir.
         print('Pickling...')
         t_0 = time.time()
-        pkl.dump(df, open(out_dir + name + '.pkl', "wb"))
+        pkl.dump(df, open(out_dir / f'{name}.pkl', "wb"))
         t_1 = time.time()
         pkl_time += (t_1 - t_0)
         print('Done. (%f seconds)' % (t_1 - t_0))

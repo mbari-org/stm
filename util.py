@@ -1,25 +1,32 @@
 import csv
-import os
 import subprocess
-
-
-def ensure_dir(fname):
-    d = os.path.dirname(fname)
-    if not os.path.exists(d):
-        os.makedirs(d)
+from pathlib import Path
 
 
 def write_csv(data, fname):
-    ensure_dir(fname)
     with open(fname, "w") as f:
         writer = csv.writer(f, delimiter=',')
         writer.writerows(data)
 
 
-def execute(cmd):
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    output, error = process.communicate()
-    return output, error
+def execute(cmd, volume_mount: Path = None, use_docker: bool = False):
+    if not use_docker:
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        output, error = process.communicate()
+        return output, error
+    else:
+        import docker
+        client = docker.from_env()
+        container = client.containers.run(
+            "rost-cli:latest",
+            cmd,
+            volumes={volume_mount: {'bind': volume_mount.as_posix(), 'mode': 'rw'}},
+            detach=True
+        )
+        container.wait()
+        output = container.logs()
+        container.remove()
+        return output, ""
 
 
 def map_range(x, a, b, c=0, d=1):
