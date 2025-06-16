@@ -14,7 +14,7 @@ docker build -t rost-cli -f DockerfileROST .
 Then run the container to test with the `topics.refine.t` command:
 
 ```shell
-docker run -it --rm -v rost-cli topics.refine.t --help
+docker run -it --rm rost-cli topics.refine.t --help
 ```
 
 You should see the help message for the `topics.refine.t` command, which indicates that the ROST CLI is working correctly.
