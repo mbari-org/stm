@@ -52,25 +52,26 @@ def main(in_dir=conf.doc_path, out_dir=conf.model_path,
 
     if online:
         top_mod_cmd.extend([
-            "words.bincount",
             "--online",
             "--out.topics.online=" + str(model_path / "topics.online.csv"),
             "--out.ppx.online=" + str(model_path / "perplexity.online.csv"),
             "--online.mint", str(online_mint)
         ])
 
-    bin_cnt_cmd = ["-i", str(model_path / "topics.maxlikelihood.csv"),
+    bin_cnt_cmd = ["words.bincount",
+                   "-i", str(model_path / "topics.maxlikelihood.csv"),
                    "-o", str(model_path / "topics.hist.csv"),
                    "-V", str(T)]
 
     if conf.use_docker:
         execute(top_mod_cmd, volume_mount=conf.model_path.parent, use_docker=True)
+        execute(bin_cnt_cmd, volume_mount=conf.model_path.parent, use_docker=True)
     else:
         execute(rost_path + top_mod_cmd)
         execute(rost_path + bin_cnt_cmd)
 
     topic_model = pd.read_csv(model_path / "topicmodel.csv", header=None).values
-    topic_hist = pd.read_csv(model_path / "topics.csv", header=None).drop(0, axis=1).values
+    topic_hist = pd.read_csv(model_path / "topics.hist.csv", header=None).drop(0, axis=1).values
 
     phi = np.zeros((T, W))
     for z in range(T):
