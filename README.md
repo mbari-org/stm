@@ -36,6 +36,19 @@ Topic modeling of data with 1 dimensional structure.:
 
 ```
 
+Make sure the docker engine is running through python with the command:
+
+```shell
+python -c "import docker; print(docker.__version__)"  
+```
+
+You should see the version of the docker package installed in your Python environment, e.g.
+
+```text
+7.1.0
+```
+
+
 #### Option 2: ROST Local
 Clone the [repository](https://gitlab.com/warplab/rost-cli) 
 
@@ -58,7 +71,7 @@ conda env create
 ```
 With virtualenv, `pip install virtualenv` then
 ```angular2html
-virtualenv --python=python3.6 venv
+virtualenv --python=python3.10 venv
 source venv/bin/activate
 (venv) $ pip install -r requirements.txt
 ```
