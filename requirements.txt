@@ -1,6 +1,7 @@
 audioread
 cycler
 decorator
+docker
 pydocker
 joblib
 kiwisolver

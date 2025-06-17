@@ -48,7 +48,10 @@ You should see the version of the docker package installed in your Python enviro
 7.1.0
 ```
 
-
+if not running, run the command:
+```shell
+pip3 install docker
+```
 #### Option 2: ROST Local
 Clone the [repository](https://gitlab.com/warplab/rost-cli) 
 
