@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from scipy.ndimage import gaussian_filter
 import librosa
 from librosa import display
@@ -130,6 +132,31 @@ def main(times=conf.times, model_path=conf.model_path, stft_path=conf.stft_path,
 
     secs_per_frame = window_size * (1 - overlap) / fs
     secs_per_doc = secs_per_frame * words_per_doc
+
+    # Write out a TSV with the Raven compatible format
+    # Selection View Channel Begin Time (s) End Time (s) Topic Probability
+    # Where View is 1, Selection indexes from 0 and Topic indexes from 0
+    with open(model_path / f"raven_topics_top1_{Path(target_file).stem}.txt", "w") as f:
+        f.write("Selection\tView\tChannel\tBegin Time (s)\tEnd Time (s)\tTopic\tTopic Probability\n")
+        for i, d in enumerate(theta):
+            start_t = i * secs_per_doc
+            end_t = start_t + secs_per_doc
+            # Get the max topic for this document and write it out
+            top_1_topic = np.argmax(d)
+            top_1_prob = d[top_1_topic]
+            f.write(f"{i+1}\t1\t1\t{start_t:.5f}\t{end_t:.5f}\t{int(top_1_topic)}\t{top_1_prob:.5f}\n")
+
+    with open(model_path / f"raven_topics_top2_{Path(target_file).stem}.txt", "w") as f:
+        f.write("Selection\tView\tChannel\tBegin Time (s)\tEnd Time (s)\tTopic 1\tTopic 1 Probability\tTopic 2\tTopic 2 Probability\n")
+        for d in theta:
+            start_t = i * secs_per_doc
+            end_t = start_t + secs_per_doc
+            # Get the top 2 topics for this document and write them out
+            top_2_topic = np.argsort(d)[-2:][::-1]  # Get the indices of the top 2 topics
+            top_2_prob = d[top_2_topic]
+            if len(top_2_topic) < 3:
+                f.write(f"{i+1}\t1\t1\t{start_t:.5f}\t{end_t:.5f}\t{int(top_2_topic[0])}\t{top_2_prob[0]:.5f}\t{int(top_2_topic[1])}\t{top_2_prob[1]:.5f}\n")
+
 
     if times is not None:
         start_doc = math.floor(times[0] / secs_per_doc)
