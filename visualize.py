@@ -146,7 +146,7 @@ def main(times=conf.times, model_path=conf.model_path, stft_path=conf.stft_path,
 
     theta_model = pd.read_csv(model_path / "theta.csv", header=None).values
     ms_per_doc = int(((window_size / fs) * (1 - overlap) * 1000)) * words_per_doc
-    theta = theta_model[start_ts//ms_per_doc:end_ts//ms_per_doc]
+    theta = theta_model[start_ts//ms_per_doc:end_ts - ms_per_doc//ms_per_doc]
     stft = pkl.load(open(stft_path / f'{target_file}.pkl', "rb"))
 
     secs_per_frame = window_size * (1 - overlap) / fs
