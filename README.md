@@ -9,7 +9,7 @@ Default parameters are set to work well with the MBARI MARS hydrophone data, but
 All parameters are in the `conf.py` file.
 
 To use, place your audio data in the `data/` directory, 
-and set the `target_file_single` variable in `conf.py` to the name of an audio file you
+and set the `target_file` variable in `conf.py` to the name of an audio file you
 would like to visualize the output on.
 
 ##  Getting Up and Running
