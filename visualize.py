@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from scipy.ndimage import gaussian_filter
 import librosa
 from librosa import display
