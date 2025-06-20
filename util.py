@@ -17,6 +17,7 @@ def execute(cmd, volume_mount: Path = None, use_docker: bool = False):
     else:
         import docker
         client = docker.from_env()
+        print(f"Running command in Docker: {cmd}")
         container = client.containers.run(
             "rost-cli:latest",
             cmd,

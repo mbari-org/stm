@@ -48,6 +48,7 @@ def label_docs(doc_times, event_times, event_labels):
 def main(
     in_dir=conf.cluster_path,
     out_dir=conf.doc_path,
+    combined_document_file=conf.combined_document_file,
     words_per_doc=conf.words_per_doc,
     window_size=conf.window_size,
     overlap=conf.overlap,
@@ -55,7 +56,7 @@ def main(
 ):
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    for filename in in_dir.glob('labels_*.pkl'):
+    for filename in sorted(in_dir.glob('labels_*.pkl')):
         name = filename.name.split('.')[0]
         name = name.split('_')[-2] + '_' + name.split('_')[-1]
 
@@ -70,26 +71,33 @@ def main(
             overlap=overlap
         )
 
-        # ms_per_word = int(((window_size / fs) * overlap) * 1000)
-        # docs = []
-        #
-        # i = 0
-        # j = words_per_doc
-        # while i < len(labels):
-        #     timestamp = j*ms_per_word
-        #     d = [timestamp]
-        #     d.extend(labels[0].values[i:j])
-        #     docs.append(d)
-        #     i += words_per_doc
-        #     if (j+words_per_doc) <= len(labels):
-        #         j += words_per_doc
-        #     else:
-        #         j = len(labels)
-        #
-
         write_csv(docs, str(out_dir / f"{name}.csv"))
+        print(f"Documents saved to {out_dir / f'{name}.csv'}")
 
-        print('Done.')
+    # Combine all the documents into one file and save a lookup file for use later
+    timestamp_start = 0
+    with open(out_dir / f'{combined_document_file}.csv', 'w') as docs_f:
+        with open(out_dir / 'lookup.csv', 'w') as lookup_f:
+            lookup_f.write('filename,ms_start,ms_end\n')
+            for filename in sorted(out_dir.glob('*.csv')):
+                if filename.name == 'lookup.csv' or filename.name == f'{combined_document_file}.csv':
+                    continue
+                with open(filename, 'r') as f:
+                    lines = f.readlines()
+                    num_words = 0
+                    for line in lines:
+                        words = line.strip().split(',')
+                        num_words += len(words) - 1  # Exclude timestamp
+                        ts = int(words[0])
+                        docs_f.write(f"{timestamp_start + ts},{','.join(words[1:])}\n")
+                        if timestamp_start == 0:
+                            timestamp_start = ts
+
+                lookup_f.write(f"{filename.name},{timestamp_start},{timestamp_start + ts}\n")
+                timestamp_start += ts
+
+    print(f"Documents saved to {out_dir / f'{combined_document_file}.csv'}")
+    print('Done.')
 
 if __name__ == "__main__":
     main()

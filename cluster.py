@@ -88,7 +88,7 @@ def main(in_dir=conf.stft_path, out_dir=conf.cluster_path,
 
     print(f"Reading from: {out_dir}")
 
-    for filename in in_dir.rglob('*.pkl'):
+    for filename in sorted(in_dir.rglob('*.pkl')):
         # increment num_files and start timer
         num_files += 1
         t0 = time.time()

@@ -1,6 +1,17 @@
 # 🎵 STM: Sound Topic Modeling
 Largely based on the excellent work in [hb-song-analysis](https://github.com/tbergama/hb-song-analysis)
 
+This project is a Python-based sound topic modeling tool that uses the [rost-cli tool](https://gitlab.com/warplab/rost-cli) 
+to analyze audio data. 
+
+There are many parameters that can be adjusted to tune the model to the data. 
+Default parameters are set to work well with the MBARI MARS hydrophone data, but can be adjusted.
+All parameters are in the `conf.py` file.
+
+To use, place your audio data in the `data/` directory, 
+and set the `target_file_single` variable in `conf.py` to the name of an audio file you
+would like to visualize the output on.
+
 ##  Getting Up and Running
 
 🐳 Option 1: ROST via Docker (Recommended)
@@ -53,7 +64,7 @@ if not running, run the command:
 pip3 install docker
 ```
 #### Option 2: ROST Local
-Clone the [repository](https://gitlab.com/warplab/rost-cli) 
+Clone the [rost-cli repository](https://gitlab.com/warplab/rost-cli) 
 
 ```shell
 git clone https://gitlab.com/warplab/rost-cli

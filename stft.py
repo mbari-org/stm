@@ -2,6 +2,7 @@
 This module computes spectrograms from given wav files that
 are preprocessed in the manner specified by conf.py
 """
+import sklearn
 from scipy.io import wavfile
 import math
 import pandas as pd
@@ -33,20 +34,36 @@ def read_wav(fpath, verbose=False):
         print('Number of Samples: %d' % len(signal))
     return fs, signal.astype(float)
 
+def compute_stft_pcen(signal, window_size, overlap, fs, fmin, fmax, gain=0.98, bias=2, power=.5, db=False):
+    hop_length = int(window_size * (1 - overlap))
+    stft_mel = librosa.feature.melspectrogram(
+        y=signal,
+        sr=fs,
+        fmin=fmin,
+        fmax=fmax,
+        n_fft=window_size,
+        hop_length=hop_length)
 
-def compute_stft(signal, window_size, overlap, power=False):
+    log_s = librosa.amplitude_to_db(stft_mel, ref=np.max)
+    pcen_s = librosa.pcen(stft_mel * (2 ** 31), sr=fs, hop_length=hop_length, gain=gain, bias=bias)
+    if db:
+        return log_s
+    else:
+        return pcen_s
+
+def compute_stft(signal, window_size, overlap, db=False):
     """
     Compute the spectrogram of the signal.
 
     :param signal: signal to compute spectrogram from
     :param window_size: number of samples per FFT
     :param overlap: overlap of each window
-    :param power: if power=True, the power spectrum is returned
+    :param db: if power=True, the power spectrum is returned
     :returns: the computed spectrogram
     """
     stp = int(window_size * (1 - overlap))
     stft = np.abs(librosa.stft(y=signal, n_fft=window_size, hop_length=stp))
-    if power:
+    if db:
         stft=librosa.amplitude_to_db(stft, ref=np.max)
     return stft
 
@@ -99,7 +116,8 @@ def stft_to_dataframe(stft):
 
 def main(in_dir=conf.wav_path, out_dir=conf.stft_path,
          window_size=conf.window_size, overlap=conf.overlap, subset=conf.subset,
-         sigma=conf.sigma, normalize=conf.normalize):
+         sigma=conf.sigma, normalize=conf.normalize, use_pcen=conf.use_pcen,
+         pcen_power=conf.power, pcen_gain=conf.pcen_gain, pcen_bias=conf.pcen_bias):
 
     # Check that input and output directories exist,
     # if not, make them.
@@ -115,7 +133,7 @@ def main(in_dir=conf.wav_path, out_dir=conf.stft_path,
     pkl_time = 0
 
     # Preprocess all wav files in the directory specified by in_dir.
-    for filename in in_dir.rglob('*.wav'):
+    for filename in sorted(in_dir.rglob('*.wav')):
 
         num_files += 1
         print('FILE NAME %s' % filename)
@@ -136,9 +154,18 @@ def main(in_dir=conf.wav_path, out_dir=conf.stft_path,
         # one has been passed.
         print('Computing spectrogram...')
         t_0 = time.time()
-        stft = compute_stft(x, window_size, overlap, power=conf.power)
-        if type(subset) == tuple:
-            stft = get_subset(stft, subset, fs=fs)
+        if use_pcen:
+            if type(subset) == tuple:
+                fmin, fmax = subset
+            else:
+                fmin, fmax = 0, fs / 2
+
+            stft = compute_stft_pcen(x, window_size, overlap, fs, fmin, fmax, power=pcen_power, gain=pcen_gain, bias=pcen_bias, db=conf.power)
+        else:
+            stft = compute_stft(x, window_size, overlap, db=conf.power)
+            if type(subset) == tuple:
+                stft = get_subset(stft, subset, fs=fs)
+
         t_1 = time.time()
         fft_time += (t_1 - t_0)
         print('Done. (%f seconds)' % (t_1 - t_0))

@@ -19,7 +19,7 @@ def spectrogram(stft, window_size, overlap, fs,
 
     hop_len = window_size * (1 - overlap)
     display.specshow(stft, y_axis=y, x_axis='time',
-                     sr=fs, hop_length=hop_len)
+                     sr=fs, hop_length=hop_len, cmap="Blues")
 
     if isinstance(c_bar, str):
         plt.colorbar(format=f"%.2f {c_bar}")
@@ -48,11 +48,12 @@ def stacked_bar(data, legend: str = None):
         P.append(plt.bar(x=ind, height=col, width=width, bottom=bottom, align='edge'))
         bottom = np.add(col, bottom)
     plt.xlim(xmin=0, xmax=len(data))
-
-    if legend:
-        plt.legend(tuple(_[0] for _ in P),
-                   [f"{legend}{i}" for i in range(data_height)],
-                   loc='lower right')
+    plt.legend(
+            tuple(_[0] for _ in P),
+            [f"{legend}{i}" for i in range(data_height)],
+            loc="upper center",
+            ncol=10
+        )
 
     return plt.gca()
 
@@ -123,11 +124,29 @@ def visualize_preproc():
 
 
 # TODO: Add input checking and option to plot the whole spectrogram
-def main(times=conf.times, model_path=conf.model_path, stft_path=conf.stft_path,
+def main(times=conf.times, model_path=conf.model_path, stft_path=conf.stft_path, doc_path=conf.doc_path,
          target_file=conf.target_file, window_size=conf.window_size, overlap=conf.overlap,
          fs=conf.sample_rate, subset=conf.subset, words_per_doc=conf.words_per_doc):
 
-    theta = pd.read_csv(model_path / "theta.csv", header=None).values
+    # Get the lookup file to find the target file within the documents
+    lookup_file = doc_path / "lookup.csv"
+    if not lookup_file.exists():
+        print(f"Lookup file {lookup_file} does not exist.")
+        return
+
+    # Find the row with the target_file in the lookup file
+    target_file_path = doc_path /  f"{target_file}.csv"
+    lookup_df = pd.read_csv(lookup_file)
+    target_row = lookup_df[lookup_df['filename'] == target_file_path.name]
+    if target_row.empty:
+        print(f"Target file {target_file_path} not found in lookup file.")
+        return
+    start_ts = target_row.ms_start.values[0]
+    end_ts = target_row.ms_end.values[0]
+
+    theta_model = pd.read_csv(model_path / "theta.csv", header=None).values
+    ms_per_doc = int(((window_size / fs) * (1 - overlap) * 1000)) * words_per_doc
+    theta = theta_model[start_ts//ms_per_doc:end_ts//ms_per_doc]
     stft = pkl.load(open(stft_path / f'{target_file}.pkl', "rb"))
 
     secs_per_frame = window_size * (1 - overlap) / fs
@@ -136,7 +155,7 @@ def main(times=conf.times, model_path=conf.model_path, stft_path=conf.stft_path,
     # Write out a TSV with the Raven compatible format
     # Selection View Channel Begin Time (s) End Time (s) Topic Probability
     # Where View is 1, Selection indexes from 0 and Topic indexes from 0
-    with open(model_path / f"raven_topics_top1_{Path(target_file).stem}.txt", "w") as f:
+    with open(model_path / f"raven_topics_top1_{target_file_path.stem}.txt", "w") as f:
         f.write("Selection\tView\tChannel\tBegin Time (s)\tEnd Time (s)\tTopic\tTopic Probability\n")
         for i, d in enumerate(theta):
             start_t = i * secs_per_doc
@@ -146,7 +165,7 @@ def main(times=conf.times, model_path=conf.model_path, stft_path=conf.stft_path,
             top_1_prob = d[top_1_topic]
             f.write(f"{i+1}\t1\t1\t{start_t:.5f}\t{end_t:.5f}\t{int(top_1_topic)}\t{top_1_prob:.5f}\n")
 
-    with open(model_path / f"raven_topics_top2_{Path(target_file).stem}.txt", "w") as f:
+    with open(model_path / f"raven_topics_top2_{target_file_path.stem}.txt", "w") as f:
         f.write("Selection\tView\tChannel\tBegin Time (s)\tEnd Time (s)\tTopic 1\tTopic 1 Probability\tTopic 2\tTopic 2 Probability\n")
         for d in theta:
             start_t = i * secs_per_doc
