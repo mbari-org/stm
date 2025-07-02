@@ -201,6 +201,8 @@ def main(times=conf.times, model_path=conf.model_path, stft_path=conf.stft_path,
 
     plt.tight_layout()
     plt.show()
+    # Save the figure
+    fig.savefig(model_path / f"{target_file_path.stem}_topics.png", dpi=300, bbox_inches='tight')
 
 if __name__ == "__main__":
     main()
