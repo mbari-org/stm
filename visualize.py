@@ -17,12 +17,14 @@ def spectrogram(stft, window_size, overlap, fs,
 
     hop_len = window_size * (1 - overlap)
     display.specshow(stft, y_axis=y, x_axis='time',
-                     sr=fs, hop_length=hop_len, cmap="Blues")
+                     sr=fs, hop_length=hop_len,
+                     fmin=freq_subset[0], fmax=freq_subset[1],
+                     cmap="Blues")
 
     if isinstance(c_bar, str):
         plt.colorbar(format=f"%.2f {c_bar}")
 
-    if freq_subset:
+    if freq_subset and y == 'linear':
         hz_per_bin = (fs / 2) / (1 + window_size / 2)
         locs, labels = plt.yticks()
         c = hz_per_bin * math.floor(freq_subset[0] / hz_per_bin)
@@ -124,7 +126,7 @@ def visualize_preproc():
 # TODO: Add input checking and option to plot the whole spectrogram
 def main(times=conf.times, model_path=conf.model_path, stft_path=conf.stft_path, doc_path=conf.doc_path,
          target_file=conf.target_file, window_size=conf.window_size, overlap=conf.overlap,
-         fs=conf.sample_rate, subset=conf.subset, words_per_doc=conf.words_per_doc):
+         fs=conf.sample_rate, subset=conf.subset, words_per_doc=conf.words_per_doc, use_pcen=conf.use_pcen):
 
     # Get the lookup file to find the target file within the documents
     lookup_file = doc_path / "lookup.csv"
@@ -191,8 +193,10 @@ def main(times=conf.times, model_path=conf.model_path, stft_path=conf.stft_path,
     fig = plt.figure(figsize=(16, 8))
 
     plt.subplot(2, 1, 1)
-    spectrogram(stft, window_size, overlap, fs,
-                freq_subset=subset)
+    if use_pcen:
+        spectrogram(stft, window_size, overlap, fs, y='mel', freq_subset=subset)
+    else:
+        spectrogram(stft, window_size, overlap, fs, y='linear', freq_subset=subset)
 
     plt.subplot(2, 1, 2)
     stacked_bar(theta, legend="T")
