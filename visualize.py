@@ -1,39 +1,43 @@
-from scipy.ndimage import gaussian_filter
-import librosa
+from datetime import datetime
 from librosa import display
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator, FuncFormatter
 import math
 import pandas as pd
 import pickle as pkl
 
 import conf
-from util import map_range
-from stft import read_wav, compute_stft, get_subset, normalize_stft
 
 
-def spectrogram(stft, window_size, overlap, fs,
-                y='linear', freq_subset: tuple = None, c_bar=None):
+def spectrogram(stft, frequencies, window_size, overlap, fs,
+                y='linear', start_time=None, c_bar=None):
 
     hop_len = window_size * (1 - overlap)
     display.specshow(stft, y_axis=y, x_axis='time',
                      sr=fs, hop_length=hop_len,
-                     fmin=freq_subset[0], fmax=freq_subset[1],
+                     y_coords=frequencies,
                      cmap="Blues")
+    ax = plt.gca()
+    num_frames = stft.shape[1]
+
+    def time_formatter(x, pos):
+        """Convert seconds to MM:SS.ms format"""
+        if start_time is not None:
+            time_in_ms = int(x * 1000)
+            time = start_time + pd.Timedelta(milliseconds=time_in_ms)
+            return time.strftime('%M:%S.%f')[:-3]
+        else:
+            return f"{int(x // 60):02}:{int(x % 60):02}.{int((x % 1) * 1000):03}"
+
+    minor_tick_interval = num_frames // 10 if num_frames >= 10 else 1
+    ax.xaxis.set_minor_locator(MultipleLocator(minor_tick_interval))
+    ax.xaxis.set_minor_formatter(FuncFormatter(time_formatter))
+    ax.xaxis.set_major_formatter(FuncFormatter(time_formatter))
 
     if isinstance(c_bar, str):
         plt.colorbar(format=f"%.2f {c_bar}")
-
-    if freq_subset and y == 'linear':
-        hz_per_bin = (fs / 2) / (1 + window_size / 2)
-        locs, labels = plt.yticks()
-        c = hz_per_bin * math.floor(freq_subset[0] / hz_per_bin)
-        d = hz_per_bin * math.ceil(freq_subset[1] / hz_per_bin)
-        new_labels = [f"{map_range(locs[i], locs[0], locs[-1], c, d):.2f}" for i in range(len(locs))]
-        plt.yticks(locs, new_labels)
-
     return plt.gca()
-
 
 def stacked_bar(data, legend: str = None):
     data_length = len(data)
@@ -51,81 +55,13 @@ def stacked_bar(data, legend: str = None):
     plt.legend(
             tuple(_[0] for _ in P),
             [f"{legend}{i}" for i in range(data_height)],
-            loc="upper center",
+            loc="lower center",
             ncol=10
         )
 
-    return plt.gca()
-
-def visualize_preproc():
-    wav_file = '/Users/thomasbergamaschi/Code/hb-song-analysis/dataset/HBSe_20151207T070326.wav'
-
-    fs, x = read_wav(wav_file, verbose=True)
-
-    fs = 32000
-    window_size = 4096
-    ovr = 0.9
-    hop_len = window_size * (1 - ovr)
-    subset = (50, 2000)
-    hz_per_bin = (fs / 2) / (1 + window_size / 2)
-
-    # Waveform
-    fig = plt.figure(figsize=(10, 3))
-    display.waveplot(x, sr=fs)
-    plt.title('Waveform (30 kHz Sample Rate)')
-    plt.tight_layout()
-    plt.show()
-
-    # Spectrogram
-    fig = plt.figure(figsize=(12, 3))
-    stft = compute_stft(x, window_size, ovr)
-    stft = librosa.amplitude_to_db(stft, ref=np.max)
-    display.specshow(stft, y_axis='linear', x_axis='time', sr=fs)
-    plt.colorbar(format='%+2.0f dB')
-    plt.title(f'Spectrogram ({window_size} Window, {ovr} Overlap)')
-    plt.tight_layout()
-    plt.show()
-
-    # Subsetted Spectrogram
-    fig = plt.figure(figsize=(12, 3))
-    stft = get_subset(stft, rng=(50, 2000))
-    display.specshow(stft, y_axis='linear', x_axis='time', sr=fs)
-    plt.colorbar(format='%+2.0f dB')
-    locs, labels = plt.yticks()
-    new_labels = [f"{hz_per_bin + ((locs[i] / 16000) * len(stft) * hz_per_bin):.2f}" for i in range(len(locs))]
-    plt.yticks(locs, new_labels)
-    plt.title('Spectrogram (50Hz to 2kHz Subset)')
-    plt.tight_layout()
-    plt.show()
-
-    # Gaussian Filtering
-    fig = plt.figure(figsize=(12, 3))
-    blurred = gaussian_filter(stft, sigma=2)
-    display.specshow(blurred, y_axis='linear', x_axis='time', sr=fs)
-    plt.colorbar(format='%+2.0f dB')
-    locs, labels = plt.yticks()
-    new_labels = [f"{hz_per_bin + ((locs[i] / 16000) * len(stft) * hz_per_bin):.2f}" for i in range(len(locs))]
-    plt.yticks(locs, new_labels)
-    plt.title('Gaussian Filter (sigma=2)')
-    plt.tight_layout()
-    plt.show()
-
-    # Normalization
-    fig = plt.figure(figsize=(12, 3))
-    normal = normalize_stft(blurred)
-    display.specshow(normal, y_axis='linear', x_axis='time', sr=fs)
-    plt.colorbar(format='%+2.0f std')
-    locs, labels = plt.yticks()
-    new_labels = [f"{hz_per_bin + ((locs[i] / 16000) * len(stft) * hz_per_bin):.2f}" for i in range(len(locs))]
-    plt.yticks(locs, new_labels)
-    plt.title('Normalized')
-    plt.tight_layout()
-    plt.show()
-
-
 # TODO: Add input checking and option to plot the whole spectrogram
 def main(times=conf.times, model_path=conf.model_path, stft_path=conf.stft_path, doc_path=conf.doc_path,
-         target_file=conf.target_file, window_size=conf.window_size, overlap=conf.overlap,
+         target_file=conf.target_file, window_size=conf.window_size, overlap=conf.overlap, gamma=conf.gamma,
          fs=conf.sample_rate, subset=conf.subset, words_per_doc=conf.words_per_doc, use_pcen=conf.use_pcen):
 
     # Get the lookup file to find the target file within the documents
@@ -176,6 +112,16 @@ def main(times=conf.times, model_path=conf.model_path, stft_path=conf.stft_path,
             if len(top_2_topic) < 3:
                 f.write(f"{i+1}\t1\t1\t{start_t:.5f}\t{end_t:.5f}\t{int(top_2_topic[0])}\t{top_2_prob[0]:.5f}\t{int(top_2_topic[1])}\t{top_2_prob[1]:.5f}\n")
 
+    frequencies = stft.index.values
+    stft = stft.values
+
+    if times:
+        start_time = pd.to_datetime(times[0], unit='s')
+        end_time = pd.to_datetime(times[1], unit='s')
+        prefix = f"{target_file_path.stem}_topics_{start_time.strftime('%M%S')}_{end_time.strftime('%M%S')}_"
+    else:
+        start_time = pd.to_datetime(0, unit='s')
+        prefix = f"{target_file_path.stem}_topics_"
 
     if times is not None:
         start_doc = math.floor(times[0] / secs_per_doc)
@@ -186,27 +132,28 @@ def main(times=conf.times, model_path=conf.model_path, stft_path=conf.stft_path,
 
         start_frame = int(real_start_t * (1 / secs_per_frame))
         end_frame = int(real_end_t * (1 / secs_per_frame))
-        stft = stft[start_frame:end_frame]
-
-    stft = np.matrix.transpose(stft.values)
+        stft = stft[:,start_frame: end_frame]
 
     fig = plt.figure(figsize=(16, 8))
 
     plt.subplot(2, 1, 1)
-    if use_pcen:
-        spectrogram(stft, window_size, overlap, fs, y='mel', freq_subset=subset)
-    else:
-        spectrogram(stft, window_size, overlap, fs, y='linear', freq_subset=subset)
+    spectrogram(stft, frequencies, window_size, overlap, fs, y='linear', start_time=start_time)
 
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    final_file = f"{prefix}{timestamp}.png"
+    plt.title(final_file)
+    plt.suptitle(f"alpha={conf.alpha}, beta={conf.beta}, gamma={gamma}, g_time={conf.g_time}, "
+                 f"vocab_size={conf.vocab_size}, words_per_doc={words_per_doc}, "
+                 f"window_size={window_size}, overlap={overlap},  "
+                 f"fs={fs}, subset={subset} use_pcen={use_pcen}" )
     plt.subplot(2, 1, 2)
     stacked_bar(theta, legend="T")
     plt.xlabel("Documents")
     plt.ylabel("Topic Probability")
 
     plt.tight_layout()
+    fig.savefig(model_path / final_file, dpi=300, bbox_inches='tight')
     plt.show()
-    # Save the figure
-    fig.savefig(model_path / f"{target_file_path.stem}_topics.png", dpi=300, bbox_inches='tight')
 
 if __name__ == "__main__":
     main()

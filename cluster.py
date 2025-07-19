@@ -24,6 +24,7 @@ def cluster(data, num_clusters, cluster_type=conf.cluster_type):
     :param cluster_type: the clustering method to use. Can be "kmeans" for k means or 'mbk' for minibatch kmeans
     :returns:
     """
+    seed = 42
     if cluster_type == 'mbk':
         # mbk parameters:
         # see this stack overflow for reasoning on chosen reassignment ratio value
@@ -32,10 +33,10 @@ def cluster(data, num_clusters, cluster_type=conf.cluster_type):
         batch_size = 10 * num_clusters
         init_size = 3 * num_clusters
         clust = MiniBatchKMeans(n_clusters=num_clusters, batch_size=batch_size, init_size=init_size,
-                                reassignment_ratio=reassignment_ratio)
+                                reassignment_ratio=reassignment_ratio, random_state=seed)
         print(f'Running MiniBatch K-Means with K = {num_clusters}...')
     elif cluster_type == 'kmeans':
-        clust = KMeans(n_clusters=num_clusters)
+        clust = KMeans(n_clusters=num_clusters, random_state=seed, n_init='auto')
         print(f'Running K-Means with K = {num_clusters}...')
     else:
         raise IOError("Invalid cluster_type. Use cluster_type='kmeans' for kmeans or"
@@ -96,6 +97,7 @@ def main(in_dir=conf.stft_path, out_dir=conf.cluster_path,
         print(f'Reading File #{num_files}: {filename}')
 
         df = pkl.load(open(filename, "rb"))
+        df = df.T
 
         # add song name and frame num columns
         name = filename.stem

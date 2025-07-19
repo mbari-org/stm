@@ -34,37 +34,47 @@ def read_wav(fpath, verbose=False):
         print('Number of Samples: %d' % len(signal))
     return fs, signal.astype(float)
 
-def compute_stft_pcen(signal, window_size, overlap, fs, fmin, fmax, gain=0.98, bias=2, power=.5, db=False):
+def compute_stft_pcen(signal, window_size, overlap, fs, fmin, fmax, gain=0.98, bias=2, tc=0.4):
+    """
+    Compute the PCEN (Per-Channel Energy Normalization) spectrogram of the signal.
+    :param signal:  signal to compute PCEN from
+    :param window_size:  number of samples per FFT
+    :param overlap:  overlap of each window
+    :param fs:  sample rate of the signal
+    :param fmin:  minimum frequency for the mel filterbank
+    :param fmax:  maximum frequency for the mel filterbank
+    :param gain:  gain parameter for PCEN
+    :param bias:  bias parameter for PCEN
+    :param tc:  time constant for PCEN, in seconds
+    :return: the PCEN spectrogram of the signal
+    """
     hop_length = int(window_size * (1 - overlap))
     stft_mel = librosa.feature.melspectrogram(
-        y=signal,
+        y=sklearn.preprocessing.minmax_scale(signal, feature_range=((-2 ** 31), (2 ** 31))),
         sr=fs,
         fmin=fmin,
         fmax=fmax,
         n_fft=window_size,
+        n_mels=256,  # Number of mel bands
         hop_length=hop_length)
 
-    log_s = librosa.amplitude_to_db(stft_mel, ref=np.max)
-    pcen_s = librosa.pcen(stft_mel * (2 ** 31), sr=fs, hop_length=hop_length, gain=gain, bias=bias)
-    if db:
-        return log_s
-    else:
-        return pcen_s
+    pcen_s = librosa.pcen(stft_mel * (2 ** 31), sr=fs, hop_length=hop_length, gain=gain, bias=bias,
+                          time_constant=tc)
+    pcen_s = librosa.power_to_db(pcen_s, ref=np.max)
+    return pcen_s
 
-def compute_stft(signal, window_size, overlap, db=False):
+def compute_stft(signal, window_size, overlap):
     """
     Compute the spectrogram of the signal.
 
     :param signal: signal to compute spectrogram from
     :param window_size: number of samples per FFT
     :param overlap: overlap of each window
-    :param db: if power=True, the power spectrum is returned
     :returns: the computed spectrogram
     """
     stp = int(window_size * (1 - overlap))
     stft = np.abs(librosa.stft(y=signal, n_fft=window_size, hop_length=stp))
-    if db:
-        stft=librosa.amplitude_to_db(stft, ref=np.max)
+    stft=librosa.amplitude_to_db(stft, ref=np.max)
     return stft
 
 
@@ -101,23 +111,25 @@ def get_subset(stft, rng, fs=32000):
     return subsetted
 
 
-def stft_to_dataframe(stft):
+def stft_to_dataframe(stft, times, frequencies):
     """
     Converts numpy spectrogram to Pandas DataFrame.
 
     :param stft: the numpy spectrogram
+    :param times: the time bins of the spectrogram
+    :param frequencies: the frequency bins of the spectrogram
     :returns: stft as a Pandas DataFrame where indexes are timesteps and columns are frequency bins
     """
-    dic = OrderedDict()
-    for i in range(len(stft)):
-        dic[i] = stft[i]
-    return pd.DataFrame.from_dict(dic)
+    frequencies = frequencies.squeeze()
+    times = times.squeeze()
+    df = pd.DataFrame(stft, index=frequencies, columns=times)
+    return df
 
 
 def main(in_dir=conf.wav_path, out_dir=conf.stft_path,
          window_size=conf.window_size, overlap=conf.overlap, subset=conf.subset,
          sigma=conf.sigma, normalize=conf.normalize, use_pcen=conf.use_pcen,
-         pcen_power=conf.power, pcen_gain=conf.pcen_gain, pcen_bias=conf.pcen_bias):
+         pcen_gain=conf.pcen_gain, pcen_bias=conf.pcen_bias, pcen_time_constant=conf.pcen_time_constant):
 
     # Check that input and output directories exist,
     # if not, make them.
@@ -149,22 +161,36 @@ def main(in_dir=conf.wav_path, out_dir=conf.stft_path,
         read_time += (t_1 - t_0)
         print('Done. (%f seconds)' % (t_1 - t_0))
 
+        # Compute the frequencies for the spectrogram. These are used later in visualization.
+        frequencies = np.fft.rfftfreq(window_size, d=1.0 / fs)
+
         # Compute spectrogram and return the
         # frequency range specified by subset if
         # one has been passed.
         print('Computing spectrogram...')
         t_0 = time.time()
         if use_pcen:
+            print('Computing PCEN...')
             if type(subset) == tuple:
                 fmin, fmax = subset
             else:
                 fmin, fmax = 0, fs / 2
 
-            stft = compute_stft_pcen(x, window_size, overlap, fs, fmin, fmax, power=pcen_power, gain=pcen_gain, bias=pcen_bias, db=conf.power)
+            stft = compute_stft_pcen(x, window_size, overlap, fs, fmin, fmax, gain=pcen_gain, bias=pcen_bias, tc=pcen_time_constant)
+            # Get the mel filterbank frequencies
+            frequencies = librosa.mel_frequencies(n_mels=stft.shape[0], fmin=fmin, fmax=fmax)
         else:
-            stft = compute_stft(x, window_size, overlap, db=conf.power)
+            print('Computing STFT...')
+            stft = compute_stft(x, window_size, overlap)
+
             if type(subset) == tuple:
-                stft = get_subset(stft, subset, fs=fs)
+                # Get the subset of the spectrogram based on the frequencies
+                start_idx = np.searchsorted(frequencies, subset[0], side="left")
+                end_idx = np.searchsorted(frequencies, subset[1], side="right")
+                stft = stft[start_idx:end_idx]
+                frequencies = frequencies[start_idx:end_idx]
+
+        times = librosa.frames_to_time(np.arange(stft.shape[1]), sr=fs, hop_length=int(window_size * (1 - overlap)))
 
         t_1 = time.time()
         fft_time += (t_1 - t_0)
@@ -186,7 +212,7 @@ def main(in_dir=conf.wav_path, out_dir=conf.stft_path,
         # with timestep indexes and frequency bin columns.
         print('Converting to dataframe...')
         t_0 = time.time()
-        df = stft_to_dataframe(stft)
+        df = stft_to_dataframe(stft, times, frequencies)
         t_1 = time.time()
         df_conv_time += (t_1 - t_0)
         print('Done. (%f seconds)' % (t_1 - t_0))

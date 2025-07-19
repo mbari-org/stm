@@ -12,7 +12,7 @@ def main(in_dir=conf.doc_path, out_dir=conf.model_path,
          rost_path=conf.rost_path, target_file=conf.combined_document_file,
          W=conf.vocab_size, T=conf.num_topics, alpha=conf.alpha, beta=conf.beta,
          g_time=conf.g_time, cell_space=conf.cell_space, threads=conf.threads,
-         online=conf.online, online_mint=conf.online_mint):
+         online=conf.online, online_mint=conf.online_mint, gamma=conf.gamma):
 
     # TODO: Add chinese restaurant process option
 
@@ -30,6 +30,7 @@ def main(in_dir=conf.doc_path, out_dir=conf.model_path,
     :param cell_space: cell width in time dimension
     :param online: run ROST online
     :param online_mint: min time (in ms) to spend between observation time steps
+    :param gamma: used if T is None, to control the growth of topics
     """
 
     model_path = Path(out_dir)
@@ -52,7 +53,7 @@ def main(in_dir=conf.doc_path, out_dir=conf.model_path,
     if T is not None:
         top_mod_cmd.extend(["-K", str(T)])
     else:
-        top_mod_cmd.extend(["--grow.topics.size=true","--gamma=.001",])
+        top_mod_cmd.extend(["--grow.topics.size=true",f"--gamma={gamma}",])
 
     print(" ".join(top_mod_cmd))
 
