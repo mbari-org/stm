@@ -2,13 +2,11 @@
 This module computes spectrograms from given wav files that
 are preprocessed in the manner specified by conf.py
 """
-import sklearn
 from scipy.io import wavfile
 import math
 import pandas as pd
 import pickle as pkl
 import librosa
-from collections import OrderedDict
 import time
 import numpy as np
 from scipy.ndimage import gaussian_filter
@@ -48,9 +46,13 @@ def compute_stft_pcen(signal, window_size, overlap, fs, fmin, fmax, gain=0.98, b
     :param tc:  time constant for PCEN, in seconds
     :return: the PCEN spectrogram of the signal
     """
+    min_val, max_val = -2 ** 31, 2 ** 31
+    signal_scaled = (signal - np.min(signal)) / (np.max(signal) - np.min(signal))
+    signal_scaled = signal_scaled * (max_val - min_val) + min_val
+
     hop_length = int(window_size * (1 - overlap))
     stft_mel = librosa.feature.melspectrogram(
-        y=sklearn.preprocessing.minmax_scale(signal, feature_range=((-2 ** 31), (2 ** 31))),
+        y=signal_scaled,
         sr=fs,
         fmin=fmin,
         fmax=fmax,
