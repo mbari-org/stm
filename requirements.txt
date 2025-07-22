@@ -10,11 +10,11 @@ llvmlite
 matplotlib
 numba
 numpy
+optuna
 pandas
 pyparsing
 python-dateutil
 pytz
 resampy
-scikit-learn
 scipy
 six

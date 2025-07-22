@@ -120,7 +120,7 @@ def stft_to_dataframe(stft, times, frequencies):
     :param stft: the numpy spectrogram
     :param times: the time bins of the spectrogram
     :param frequencies: the frequency bins of the spectrogram
-    :returns: stft as a Pandas DataFrame where indexes are timesteps and columns are frequency bins
+    :returns: stft as a Pandas DataFrame where indexes are frequencies bins and columns are time bins
     """
     frequencies = frequencies.squeeze()
     times = times.squeeze()
