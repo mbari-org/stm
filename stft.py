@@ -50,6 +50,17 @@ def compute_stft_pcen(signal, window_size, overlap, fs, fmin, fmax, gain=0.98, b
     signal_scaled = (signal - np.min(signal)) / (np.max(signal) - np.min(signal))
     signal_scaled = signal_scaled * (max_val - min_val) + min_val
 
+    # Adjust the number of mels bands based on the frequency range
+    # 32kHz or greater 256 mel bands, 16kHz or less 128 mel bands,
+    # 8kHz or less 64 mel bands.
+    if fs >= 32000:
+        n_mels = 256
+    elif fs >= 16000:
+        n_mels = 128
+    elif fs >= 8000:
+        n_mels = 64
+    else:
+        n_mels = 32
     hop_length = int(window_size * (1 - overlap))
     stft_mel = librosa.feature.melspectrogram(
         y=signal_scaled,
@@ -57,7 +68,7 @@ def compute_stft_pcen(signal, window_size, overlap, fs, fmin, fmax, gain=0.98, b
         fmin=fmin,
         fmax=fmax,
         n_fft=window_size,
-        n_mels=256,  # Number of mel bands
+        n_mels=n_mels,
         hop_length=hop_length)
 
     pcen_s = librosa.pcen(stft_mel * (2 ** 31), sr=fs, hop_length=hop_length, gain=gain, bias=bias,
