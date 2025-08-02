@@ -74,27 +74,24 @@ def main(
         write_csv(docs, str(out_dir / f"{name}.csv"))
         print(f"Documents saved to {out_dir / f'{name}.csv'}")
 
+    msecs_per_word = int(((window_size / fs) * (1 - overlap) * 1000))
     # Combine all the documents into one file and save a lookup file for use later
     timestamp_start = 0
     with open(out_dir / f'{combined_document_file}.csv', 'w') as docs_f:
         with open(out_dir / 'lookup.csv', 'w') as lookup_f:
-            lookup_f.write('filename,ms_start,ms_end\n')
+            lookup_f.write('filename,ts_start,ts_end\n')
             for filename in sorted(out_dir.glob('*.csv')):
                 if filename.name == 'lookup.csv' or filename.name == f'{combined_document_file}.csv':
                     continue
                 with open(filename, 'r') as f:
                     lines = f.readlines()
-                    num_words = 0
                     for line in lines:
                         words = line.strip().split(',')
-                        num_words += len(words) - 1  # Exclude timestamp
                         ts = int(words[0])
                         docs_f.write(f"{timestamp_start + ts},{','.join(words[1:])}\n")
-                        if timestamp_start == 0:
-                            timestamp_start = ts
 
                 lookup_f.write(f"{filename.name},{timestamp_start},{timestamp_start + ts}\n")
-                timestamp_start += ts
+                timestamp_start += ts + msecs_per_word * words_per_doc
 
     print(f"Documents saved to {out_dir / f'{combined_document_file}.csv'}")
     print('Done.')

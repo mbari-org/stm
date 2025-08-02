@@ -77,12 +77,12 @@ def main(times=conf.times, model_path=conf.model_path, stft_path=conf.stft_path,
     if target_row.empty:
         print(f"Target file {target_file_path} not found in lookup file.")
         return
-    start_ts = target_row.ms_start.values[0]
-    end_ts = target_row.ms_end.values[0]
+    ms_per_doc = int(((window_size / fs) * (1 - overlap) * 1000)) * words_per_doc
+    start_idx = (target_row.ts_start.values[0]) // ms_per_doc
+    end_idx = (target_row.ts_end.values[0]) // ms_per_doc
 
     theta_model = pd.read_csv(model_path / "theta.csv", header=None).values
-    ms_per_doc = int(((window_size / fs) * (1 - overlap) * 1000)) * words_per_doc
-    theta = theta_model[start_ts//ms_per_doc:end_ts - ms_per_doc//ms_per_doc]
+    theta = theta_model[start_idx:end_idx]
     stft = pkl.load(open(stft_path / f'{target_file}.pkl', "rb"))
 
     secs_per_frame = window_size * (1 - overlap) / fs

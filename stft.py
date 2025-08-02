@@ -32,7 +32,7 @@ def read_wav(fpath, verbose=False):
         print('Number of Samples: %d' % len(signal))
     return fs, signal.astype(float)
 
-def compute_stft_pcen(signal, window_size, overlap, fs, fmin, fmax, gain=0.98, bias=2, tc=0.4):
+def compute_stft_pcen(signal, window_size, overlap, fs, fmin, fmax, num_mel_bins=32, gain=0.98, bias=2, tc=0.4):
     """
     Compute the PCEN (Per-Channel Energy Normalization) spectrogram of the signal.
     :param signal:  signal to compute PCEN from
@@ -41,6 +41,7 @@ def compute_stft_pcen(signal, window_size, overlap, fs, fmin, fmax, gain=0.98, b
     :param fs:  sample rate of the signal
     :param fmin:  minimum frequency for the mel filterbank
     :param fmax:  maximum frequency for the mel filterbank
+    :param num_mel_bins:  number of mel frequency bins
     :param gain:  gain parameter for PCEN
     :param bias:  bias parameter for PCEN
     :param tc:  time constant for PCEN, in seconds
@@ -50,17 +51,6 @@ def compute_stft_pcen(signal, window_size, overlap, fs, fmin, fmax, gain=0.98, b
     signal_scaled = (signal - np.min(signal)) / (np.max(signal) - np.min(signal))
     signal_scaled = signal_scaled * (max_val - min_val) + min_val
 
-    # Adjust the number of mels bands based on the frequency range
-    # 32kHz or greater 256 mel bands, 16kHz or less 128 mel bands,
-    # 8kHz or less 64 mel bands.
-    if fs >= 32000:
-        n_mels = 256
-    elif fs >= 16000:
-        n_mels = 128
-    elif fs >= 8000:
-        n_mels = 64
-    else:
-        n_mels = 32
     hop_length = int(window_size * (1 - overlap))
     stft_mel = librosa.feature.melspectrogram(
         y=signal_scaled,
@@ -68,7 +58,7 @@ def compute_stft_pcen(signal, window_size, overlap, fs, fmin, fmax, gain=0.98, b
         fmin=fmin,
         fmax=fmax,
         n_fft=window_size,
-        n_mels=n_mels,
+        n_mels=num_mel_bins,
         hop_length=hop_length)
 
     pcen_s = librosa.pcen(stft_mel * (2 ** 31), sr=fs, hop_length=hop_length, gain=gain, bias=bias,
@@ -142,7 +132,8 @@ def stft_to_dataframe(stft, times, frequencies):
 def main(in_dir=conf.wav_path, out_dir=conf.stft_path,
          window_size=conf.window_size, overlap=conf.overlap, subset=conf.subset,
          sigma=conf.sigma, normalize=conf.normalize, use_pcen=conf.use_pcen,
-         pcen_gain=conf.pcen_gain, pcen_bias=conf.pcen_bias, pcen_time_constant=conf.pcen_time_constant):
+         pcen_gain=conf.pcen_gain, pcen_bias=conf.pcen_bias,
+         pcen_time_constant=conf.pcen_time_constant, num_mel_bins=conf.num_mel_bins):
 
     # Check that input and output directories exist,
     # if not, make them.
@@ -189,7 +180,7 @@ def main(in_dir=conf.wav_path, out_dir=conf.stft_path,
             else:
                 fmin, fmax = 0, fs / 2
 
-            stft = compute_stft_pcen(x, window_size, overlap, fs, fmin, fmax, gain=pcen_gain, bias=pcen_bias, tc=pcen_time_constant)
+            stft = compute_stft_pcen(x, window_size, overlap, fs, fmin, fmax, num_mel_bins=num_mel_bins, gain=pcen_gain, bias=pcen_bias, tc=pcen_time_constant)
             # Get the mel filterbank frequencies
             frequencies = librosa.mel_frequencies(n_mels=stft.shape[0], fmin=fmin, fmax=fmax)
         else:
