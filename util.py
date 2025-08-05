@@ -1,7 +1,10 @@
 import csv
 import subprocess
+import os
 from pathlib import Path
 
+uid = os.getuid()
+gid = os.getgid()
 
 def write_csv(data, fname):
     with open(fname, "w") as f:
@@ -22,6 +25,7 @@ def execute(cmd, volume_mount: Path = None, use_docker: bool = False):
             "rost-cli:latest",
             cmd,
             volumes={volume_mount: {'bind': volume_mount.as_posix(), 'mode': 'rw'}},
+            user=f"{uid}:{gid}",
             detach=True
         )
         container.wait()
