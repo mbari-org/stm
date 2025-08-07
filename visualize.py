@@ -61,8 +61,10 @@ def stacked_bar(data, legend: str = None):
 
 # TODO: Add input checking and option to plot the whole spectrogram
 def main(times=conf.times, model_path=conf.model_path, stft_path=conf.stft_path, doc_path=conf.doc_path,
-         target_file=conf.target_file, window_size=conf.window_size, overlap=conf.overlap, gamma=conf.gamma,
-         fs=conf.sample_rate, subset=conf.subset, words_per_doc=conf.words_per_doc, use_pcen=conf.use_pcen):
+         target_file=conf.target_file, window_size=conf.window_size, overlap=conf.overlap, alpha=conf.alpha,
+         beta=conf.beta, gamma=conf.gamma, g_time=conf.g_time,
+         fs=conf.sample_rate, subset=conf.subset, words_per_doc=conf.words_per_doc,
+         use_pcen=conf.use_pcen):
 
     # Get the lookup file to find the target file within the documents
     lookup_file = doc_path / "lookup.csv"
@@ -78,8 +80,8 @@ def main(times=conf.times, model_path=conf.model_path, stft_path=conf.stft_path,
         print(f"Target file {target_file_path} not found in lookup file.")
         return
     ms_per_doc = int(((window_size / fs) * (1 - overlap) * 1000)) * words_per_doc
-    start_idx = (target_row.ts_start.values[0]) // ms_per_doc
-    end_idx = (target_row.ts_end.values[0]) // ms_per_doc
+    start_idx = math.floor(target_row.ts_start.values[0]) // ms_per_doc
+    end_idx = math.ceil(target_row.ts_end.values[0]) // ms_per_doc
 
     theta_model = pd.read_csv(model_path / "theta.csv", header=None).values
     theta = theta_model[start_idx:end_idx]
@@ -142,7 +144,7 @@ def main(times=conf.times, model_path=conf.model_path, stft_path=conf.stft_path,
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     final_file = f"{prefix}{timestamp}.png"
     plt.title(final_file)
-    plt.suptitle(f"alpha={conf.alpha}, beta={conf.beta}, gamma={gamma}, g_time={conf.g_time}, "
+    plt.suptitle(f"alpha={alpha}, beta={beta}, gamma={gamma}, g_time={g_time}, "
                  f"vocab_size={conf.vocab_size}, words_per_doc={words_per_doc}, "
                  f"window_size={window_size}, overlap={overlap},  "
                  f"fs={fs}, subset={subset} use_pcen={use_pcen}" )
