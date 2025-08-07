@@ -31,6 +31,7 @@ def objective(trial):
         try:
             out_dir = conf.model_path / "perplexity_sweeps"/ f"trial_{i+1}_alpha_{alpha}_beta_{beta}_gamma_{gamma}_gtime_{g_time}"
             out_dir.mkdir(parents=True, exist_ok=True)
+            trial.set_user_attr("out_dir", out_dir.as_posix())
             topic_model.main(alpha=alpha, beta=beta, gamma=gamma, g_time=g_time, out_dir=out_dir)
             perplexity = calculate_perplexity(out_dir / "perplexity.csv")
             perplexity_sum += perplexity
@@ -51,9 +52,9 @@ if __name__ == "__main__":
         "alpha": [0.001],
         "beta": [0.001],
         "gamma": [0.001],
-        "g_time": [2]
+        "g_time": [2,3,4,5]
     }
     study = optuna.create_study(sampler=optuna.samplers.GridSampler(search_space), study_name="Perplexity_grid")
-    study.optimize(objective, n_trials=2, n_jobs=4)
-    # Save all trials to a CSV
-    pd.DataFrame(study).to_csv(f"./optuna_perplexity_grid.csv")
+    study.optimize(objective, n_trials=1, n_jobs=4)
+    df = study.trials_dataframe()
+    df.to_csv("./optuna_perplexity_grid.csv", index=False)
