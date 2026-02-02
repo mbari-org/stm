@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Generate tonal pulse datasets using SOX via subprocess.
+This is useful for generating a very simple example for testing.
 """
 
 import subprocess
@@ -70,7 +71,7 @@ def main() -> None:
 
     run_sox(
         output_path=out_dir / "MARS-20231128T150000Z_2.wav",
-        total_duration=30,
+        total_duration=60,
         tone_duration=2,
         silence_duration=10,
         freq_hz=4000,
