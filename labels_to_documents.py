@@ -6,7 +6,7 @@ from util import write_csv
 
 
 def group_docs(words, words_per_doc, window_size, overlap, start_t=0, fs=32000):
-    ms_per_word = int(((window_size / fs) * (1-overlap) * 1000))
+    ms_per_word = int(((window_size * (1-overlap) / fs) * 1000))
     docs = []
 
     i = 0
@@ -52,7 +52,7 @@ def main(
     words_per_doc=conf.words_per_doc,
     window_size=conf.window_size,
     overlap=conf.overlap,
-    fs=32000
+    fs=conf.sample_rate
 ):
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -68,13 +68,14 @@ def main(
             words=labels,
             words_per_doc=words_per_doc,
             window_size=window_size,
-            overlap=overlap
+            overlap=overlap,
+            fs=fs
         )
 
         write_csv(docs, str(out_dir / f"{name}.csv"))
         print(f"Documents saved to {out_dir / f'{name}.csv'}")
 
-    msecs_per_word = int(((window_size / fs) * (1 - overlap) * 1000))
+    msecs_per_word = int(((window_size * (1 - overlap) / fs)  * 1000))
     # Combine all the documents into one file and save a lookup file for use later
     timestamp_start = 0
     with open(out_dir / f'{combined_document_file}.csv', 'w') as docs_f:
