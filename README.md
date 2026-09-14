@@ -1,4 +1,4 @@
-# 🎵 STM2: Sound Topic Modeling
+# 🎵 STM: Sound Topic Modeling
 
 Tools for discovering units, phrases, and themes in audio files using Perch2 embeddings and/or PCEN spectrogram features,
 with a topic model.  Outputs can be edited using the popular [Raven](https://www.ravensoundsoftware.com/) then trained
