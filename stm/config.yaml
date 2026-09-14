@@ -1,0 +1,58 @@
+# stm, Apache-2.0 license
+# Filename: config.yaml
+# Description: Central configuration for model parameters and binary paths
+
+# Paths for the topic model binaries
+rost_path: "./rost-cli/bin/"
+use_docker: True # Set to False if using local installation with rost_path
+rost_docker_image: "rost-cli:latest"
+
+# How short audio is extended to perch_window_seconds before Perch inference:
+# - "tile": repeat the leading audio (see perch_features._tile_to_length)
+# - "pad": zero-pad the remainder (see perch_features._pad_to_length)
+perch_window_fill: "pad"
+perch_batch_size: 64
+
+# Peak normalization of each window's raw audio BEFORE it is fed to the Perch
+# ONNX model: every window is scaled so its absolute peak is perch_peak_target,
+# so recordings at different levels (and loud/quiet stretches within one file)
+# reach the model at a comparable amplitude. See perch_features.py's peak_normalize_window().
+perch_peak_normalize: True
+perch_peak_target: 0.25
+
+
+# STFT / PCEN
+window_size: 2048
+overlap: 0.75
+num_mel_bins: 128
+sigma: 1.0
+pcen_fmin: 50.0
+pcen_fmax: 8000.0
+pcen_gain: 0.5  # Gain for PCEN, generally between 0.1 and 0.5
+pcen_bias: 2  # Bias for PCEN
+pcen_time_constant: 0.4  # Time constant for PCEN, in seconds
+# After PCEN, optionally convert to dB via librosa.power_to_db(..., ref=np.max).
+pcen_power_to_db: True
+# Quantize frames
+# pcen_cluster: null = raw PCEN extract time;
+# pcen_cluster: "kmeans" use kmeans to reduce
+# pcen_n_clusters: integer K, or null to pick K from the inertia-curve knee log-spaced sweep
+pcen_cluster: "kmeans"
+pcen_n_clusters: null
+
+
+# Topic model parameters
+num_topics: None # If None, the model will grow topics dynamically.
+# alpha: Lower: each document is more likely to be dominated by a small number of topics (i.e., sparse topic distribution).
+# beta: Lower: each topic is more likely to be dominated by a small number of words (i.e., sparse word distribution).
+# gamma: Used if num_topics is None, to control the growth of topics.
+alpha: 0.01
+beta: 0.1
+gamma: 0.001
+max_topic: True  # When True, export a single max topic per time period in topics.maxlikelihood_with_time.csv.
+g_time: 2  # Depth of temporal neighborhood in cells
+cell_space: 0 # cell width in space dim
+threads: 64
+online: False
+online_mint: 5
+word_per_doc: 32
