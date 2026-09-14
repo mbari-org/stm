@@ -17,11 +17,11 @@ TODO: add description of Perch2 and PCEN features.
 
 ### Step 1. Discover units, phrases, and themes in audio files 
  
-* [Train with Perch2](perchtopic/notebooks/train_topic_model_perch2.ipynb) 
+* [Train with Perch2](https://colab.research.google.com/github/mbari-org/stm/blob/main/stm/notebooks/train_topic_model_perch2.ipynb) 
   — Computes embeddings in the audio with the Google Perch2 model then train a topic model on those embeddings to discover themes and phrases.
-* [Train with PCEN](perchtopic/notebooks/train_topic_model_pcen.ipynb) 
+* [Train with PCEN](https://colab.research.google.com/github/mbari-org/stm/blob/main/stm/notebooks/train_topic_model_pcen.ipynb) 
   — Compute PCEN spectrogram features and train a topic model without Perch2. This is faster than Perch2 and finer-grained. Best for unit-level classification.
-* [Train with Perch2 and PCEN](perchtopic/notebooks/train_topic_model.ipynb) 
+* [Train with Perch2 and PCEN](https://colab.research.google.com/github/mbari-org/stm/blob/main/stm/notebooks/train_topic_model.ipynb) 
   — Computes embeddings in the audio with the Google Perch2 model and PCEN features, then train a topic model.
 
 ### Step 2. Edit topic model output in Raven Lite or Raven Pro
@@ -29,9 +29,9 @@ TODO: add description of Perch2 and PCEN features.
 
 ### Step 3.  
 
-* [Extract Raven units](perchtopic/notebooks/extract_raven_units.ipynb) 
+* [Extract Raven units](https://colab.research.google.com/github/mbari-org/stm/blob/main/stm/notebooks/extract_raven_units.ipynb) 
   — Parse Raven selection tables and export labeled unit clips.
-* [Train a linear probe on Raven units](perchtopic/notebooks/train_raven_units.ipynb) 
+* [Train a linear probe on Raven units](https://colab.research.google.com/github/mbari-org/stm/blob/main/stm/notebooks/train_raven_units.ipynb) 
   — embed exported units with Perch2 and train a linear probe.
 
 
