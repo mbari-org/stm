@@ -12,7 +12,7 @@ from typing import Any
 
 import numpy as np
 
-from perchtopic.config import Config
+from stm.config import Config
 
 
 def atomic_write_json(path: Path, payload: dict[str, Any]) -> None:

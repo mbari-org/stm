@@ -15,19 +15,19 @@ import numpy as np
 import soundfile as sf
 from scipy.ndimage import gaussian_filter
 
-from perchtopic.cache import (
+from stm.cache import (
     PerchCacheKey,
     atomic_write_json,
     atomic_write_npy,
     default_perch_cache_root,
     perch_cache_stem,
 )
-from perchtopic.classify import (
+from stm.classify import (
     PERCH2_EMBEDDING_DIM,
     PERCH2_SAMPLE_RATE,
     PERCH2_WINDOW_SECONDS,
 )
-from perchtopic.embed import (
+from stm.embed import (
     PERCH_INPUT_SAMPLES,
     _fill_to_length,
     embed_windows,
@@ -313,7 +313,7 @@ class Perch2Extractor:
             if not self.model.is_file():
                 raise ValueError(f"Perch2Extractor model:{model} must be a file not a directory")
         else:
-            from perchtopic.embed import PERCH_ONNX_URL, _ensure_onnx_model
+            from stm.embed import PERCH_ONNX_URL, _ensure_onnx_model
             self.model = _ensure_onnx_model(Path(PERCH_ONNX_URL))
         self.timeout = timeout
         self.window_fill = window_fill

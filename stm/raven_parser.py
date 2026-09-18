@@ -6,7 +6,7 @@ import numpy as np
 import soundfile as sf
 from pathlib import Path
 
-from perchtopic.config import Config
+from stm.config import Config
 
 LABEL_COLUMNS = ("label", "Label", "Classification", "classify", "Unit")
 BACKGROUND_LABEL = "background"

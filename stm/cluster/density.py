@@ -12,10 +12,10 @@ import onnxruntime as ort
 import soundfile as sf
 import umap
 
-from perchtopic.config import Config
-from perchtopic.embed import PERCH_INPUT_SAMPLES, _ensure_onnx_model, _fill_to_length
+from stm.config import Config
+from stm.embed import PERCH_INPUT_SAMPLES, _ensure_onnx_model, _fill_to_length
 
-UMAP_COMPONENTS = 30
+UMAP_COMPONENTS = 250
 HDBSCAN_MIN_CLUSTER_SIZE = 2
 
 class DensityCluster:

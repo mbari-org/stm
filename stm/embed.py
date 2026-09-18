@@ -11,7 +11,7 @@ import numpy as np
 import onnxruntime as ort
 import soundfile as sf
 
-from perchtopic.cache import UnitCacheKey
+from stm.cache import UnitCacheKey
 
 PERCH_ONNX_URL = "https://huggingface.co/justinchuby/Perch-onnx/resolve/main/perch_v2.onnx"
 PERCH_INPUT_SAMPLES = 160000  # Perch v2: 5 s at 32 kHz
