@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 import soundfile as sf
 
-from perchtopic.features import (
+from stm.features import (
     FeatureBlock,
     PcenExtractor,
     Perch2Extractor,

@@ -5,8 +5,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from perchtopic.config import Config
-from perchtopic.features import PcenExtractor, Perch2Extractor
+from stm.config import Config
+from stm.features import PcenExtractor, Perch2Extractor
 
 
 def test_config_load_reads_pcen_keys_and_ignores_extras(tmp_path: Path) -> None:

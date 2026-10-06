@@ -12,8 +12,8 @@ import numpy as np
 import pytest
 import soundfile as sf
 
-from perchtopic.features import FeatureBlock, TimeGrid
-from perchtopic.topicmodel.plotter import Plotter
+from stm.features import FeatureBlock, TimeGrid
+from stm.topicmodel.plotter import Plotter
 
 
 def _write_theta(model_dir: Path, n_docs: int = 10, n_topics: int = 3) -> Path:

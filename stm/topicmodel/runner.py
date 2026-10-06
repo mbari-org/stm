@@ -15,7 +15,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from perchtopic.features import FeatureBlock, TimeGrid, combine
+from stm.features import FeatureBlock, TimeGrid, combine
 
 DEFAULT_IMAGE = "rost-cli:latest"
 MODEL_META_NAME = "model_meta.json"
@@ -548,11 +548,11 @@ def _cluster_word_ids(
 
     method = str(method).lower()
     if method == "kmeans":
-        from perchtopic.cluster import KMeansCluster
+        from stm.cluster import KMeansCluster
 
         clustered = KMeansCluster(values, random_state=random_state)
     elif method == "hdbscan":
-        from perchtopic.cluster import DensityCluster
+        from stm.cluster import DensityCluster
 
         clustered = DensityCluster(values, random_state=random_state, assign_noise=assign_noise)
     else:
@@ -573,7 +573,7 @@ def _probe_word_ids(
     values: np.ndarray,
     linear_model: Path | str | object,
 ) -> tuple[np.ndarray, int]:
-    from perchtopic.classify import LinearModel
+    from stm.classify import LinearModel
 
     if isinstance(linear_model, (str, Path)):
         path = Path(linear_model)

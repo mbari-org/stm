@@ -10,8 +10,8 @@ import numpy as np
 import pytest
 import soundfile as sf
 
-from perchtopic.cache import UnitCacheKey
-from perchtopic.embed import PERCH_INPUT_SAMPLES, Embedding, embed_windows, total_audio_seconds
+from stm.cache import UnitCacheKey
+from stm.embed import PERCH_INPUT_SAMPLES, Embedding, embed_windows, total_audio_seconds
 
 
 def _write_wav(path: Path, n_samples: int, sr: int = 32000) -> None:

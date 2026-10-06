@@ -19,7 +19,7 @@ from matplotlib.ticker import FuncFormatter, MultipleLocator
 from scipy import signal as scipy_signal
 from scipy.optimize import linear_sum_assignment
 
-from perchtopic.raven_parser import LABEL_COLUMNS
+from stm.raven_parser import LABEL_COLUMNS
 
 BACKGROUND_BAR_COLOR = "white"
 WINDOW_SIZE = 512
