@@ -13,7 +13,8 @@ dependencies = [
     "pandas>=2.3.3",
     "pyyaml>=6.0.3",
     "soundfile>=0.14.0",
-    "torch>=2.14.0",
+    "torch==2.14.1",
+    "torchvision==0.29.1",
     "umap-learn>=0.5.7",
 ]
 readme = "README.md"
