@@ -1,0 +1,747 @@
+[
+  {
+    "unit_dc": "H",
+    "code_fo": "11122",
+    "unit_fo": "1"
+  },
+  {
+    "unit_dc": "H",
+    "code_fo": "11122",
+    "unit_fo": "1"
+  },
+  {
+    "unit_dc": "A",
+    "code_fo": "21112",
+    "unit_fo": "2"
+  },
+  {
+    "unit_dc": "A",
+    "code_fo": "21112",
+    "unit_fo": "2"
+  },
+  {
+    "unit_dc": "A",
+    "code_fo": "11111",
+    "unit_fo": "3"
+  },
+  {
+    "unit_dc": "A",
+    "code_fo": "11111",
+    "unit_fo": "3"
+  },
+  {
+    "unit_dc": "A",
+    "code_fo": "11111",
+    "unit_fo": "3"
+  },
+  {
+    "unit_dc": "H",
+    "code_fo": "11121",
+    "unit_fo": "4"
+  },
+  {
+    "unit_dc": "H",
+    "code_fo": "11121",
+    "unit_fo": "4"
+  },
+  {
+    "unit_dc": "A",
+    "code_fo": "21112",
+    "unit_fo": "2"
+  },
+  {
+    "unit_dc": "A",
+    "code_fo": "21112",
+    "unit_fo": "2"
+  },
+  {
+    "unit_dc": "A",
+    "code_fo": "21112",
+    "unit_fo": "2"
+  },
+  {
+    "unit_dc": "H",
+    "code_fo": "11121",
+    "unit_fo": "4"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "11111",
+    "unit_fo": "3"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "11111",
+    "unit_fo": "3"
+  },
+  {
+    "unit_dc": "K",
+    "code_fo": "31111",
+    "unit_fo": "5"
+  },
+  {
+    "unit_dc": "K",
+    "code_fo": "31111",
+    "unit_fo": "5"
+  },
+  {
+    "unit_dc": "K",
+    "code_fo": "31111",
+    "unit_fo": "5"
+  },
+  {
+    "unit_dc": "G",
+    "code_fo": "61121",
+    "unit_fo": "6"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "11112",
+    "unit_fo": "7"
+  },
+  {
+    "unit_dc": "K",
+    "code_fo": "31121",
+    "unit_fo": "8"
+  },
+  {
+    "unit_dc": "K",
+    "code_fo": "31121",
+    "unit_fo": "8"
+  },
+  {
+    "unit_dc": "G",
+    "code_fo": "61122",
+    "unit_fo": "9"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "11111",
+    "unit_fo": "3"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "11111",
+    "unit_fo": "3"
+  },
+  {
+    "unit_dc": "K",
+    "code_fo": "31121",
+    "unit_fo": "8"
+  },
+  {
+    "unit_dc": "G",
+    "code_fo": "61121",
+    "unit_fo": "6"
+  },
+  {
+    "unit_dc": "K",
+    "code_fo": "11111",
+    "unit_fo": "3"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "11111",
+    "unit_fo": "3"
+  },
+  {
+    "unit_dc": "K",
+    "code_fo": "11121",
+    "unit_fo": "4"
+  },
+  {
+    "unit_dc": "G",
+    "code_fo": "61121",
+    "unit_fo": "6"
+  },
+  {
+    "unit_dc": "ZS",
+    "code_fo": "61222",
+    "unit_fo": "10"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "11111",
+    "unit_fo": "3"
+  },
+  {
+    "unit_dc": "K",
+    "code_fo": "31121",
+    "unit_fo": "8"
+  },
+  {
+    "unit_dc": "G",
+    "code_fo": "11121",
+    "unit_fo": "4"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "61211",
+    "unit_fo": "11"
+  },
+  {
+    "unit_dc": "K",
+    "code_fo": "31121",
+    "unit_fo": "8"
+  },
+  {
+    "unit_dc": "G",
+    "code_fo": "61121",
+    "unit_fo": "6"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "61221",
+    "unit_fo": "12"
+  },
+  {
+    "unit_dc": "K",
+    "code_fo": "31121",
+    "unit_fo": "8"
+  },
+  {
+    "unit_dc": "G",
+    "code_fo": "11121",
+    "unit_fo": "4"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "61222",
+    "unit_fo": "10"
+  },
+  {
+    "unit_dc": "F",
+    "code_fo": "21122",
+    "unit_fo": "13"
+  },
+  {
+    "unit_dc": "K",
+    "code_fo": "61121",
+    "unit_fo": "6"
+  },
+  {
+    "unit_dc": "G",
+    "code_fo": "31122",
+    "unit_fo": "14"
+  },
+  {
+    "unit_dc": "F",
+    "code_fo": "21122",
+    "unit_fo": "13"
+  },
+  {
+    "unit_dc": "K",
+    "code_fo": "32121",
+    "unit_fo": "15"
+  },
+  {
+    "unit_dc": "G",
+    "code_fo": "11121",
+    "unit_fo": "4"
+  },
+  {
+    "unit_dc": "F",
+    "code_fo": "21222",
+    "unit_fo": "16"
+  },
+  {
+    "unit_dc": "K",
+    "code_fo": "32121",
+    "unit_fo": "15"
+  },
+  {
+    "unit_dc": "G",
+    "code_fo": "11122",
+    "unit_fo": "1"
+  },
+  {
+    "unit_dc": "F",
+    "code_fo": "61122",
+    "unit_fo": "9"
+  },
+  {
+    "unit_dc": "K",
+    "code_fo": "32121",
+    "unit_fo": "15"
+  },
+  {
+    "unit_dc": "G",
+    "code_fo": "31121",
+    "unit_fo": "8"
+  },
+  {
+    "unit_dc": "W",
+    "code_fo": "32121",
+    "unit_fo": "15"
+  },
+  {
+    "unit_dc": "W",
+    "code_fo": "32121",
+    "unit_fo": "15"
+  },
+  {
+    "unit_dc": "W",
+    "code_fo": "31121",
+    "unit_fo": "8"
+  },
+  {
+    "unit_dc": "W",
+    "code_fo": "32121",
+    "unit_fo": "15"
+  },
+  {
+    "unit_dc": "W",
+    "code_fo": "32121",
+    "unit_fo": "15"
+  },
+  {
+    "unit_dc": "W",
+    "code_fo": "32121",
+    "unit_fo": "15"
+  },
+  {
+    "unit_dc": "E",
+    "code_fo": "21122",
+    "unit_fo": "13"
+  },
+  {
+    "unit_dc": "W",
+    "code_fo": "32121",
+    "unit_fo": "15"
+  },
+  {
+    "unit_dc": "E",
+    "code_fo": "31122",
+    "unit_fo": "14"
+  },
+  {
+    "unit_dc": "W",
+    "code_fo": "32121",
+    "unit_fo": "15"
+  },
+  {
+    "unit_dc": "N",
+    "code_fo": "32121",
+    "unit_fo": "15"
+  },
+  {
+    "unit_dc": "E",
+    "code_fo": "21122",
+    "unit_fo": "13"
+  },
+  {
+    "unit_dc": "W",
+    "code_fo": "32122",
+    "unit_fo": "17"
+  },
+  {
+    "unit_dc": "W",
+    "code_fo": "32122",
+    "unit_fo": "17"
+  },
+  {
+    "unit_dc": "E",
+    "code_fo": "71122",
+    "unit_fo": "18"
+  },
+  {
+    "unit_dc": "W",
+    "code_fo": "32122",
+    "unit_fo": "17"
+  },
+  {
+    "unit_dc": "N",
+    "code_fo": "12122",
+    "unit_fo": "19"
+  },
+  {
+    "unit_dc": "N",
+    "code_fo": "12112",
+    "unit_fo": "20"
+  },
+  {
+    "unit_dc": "N",
+    "code_fo": "12112",
+    "unit_fo": "20"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12112",
+    "unit_fo": "20"
+  },
+  {
+    "unit_dc": "E",
+    "code_fo": "71122",
+    "unit_fo": "18"
+  },
+  {
+    "unit_dc": "J",
+    "code_fo": "11122",
+    "unit_fo": "1"
+  },
+  {
+    "unit_dc": "N",
+    "code_fo": "12112",
+    "unit_fo": "20"
+  },
+  {
+    "unit_dc": "N",
+    "code_fo": "12112",
+    "unit_fo": "20"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12112",
+    "unit_fo": "20"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12112",
+    "unit_fo": "20"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12112",
+    "unit_fo": "20"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12112",
+    "unit_fo": "20"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12112",
+    "unit_fo": "20"
+  },
+  {
+    "unit_dc": "B",
+    "code_fo": "71122",
+    "unit_fo": "18"
+  },
+  {
+    "unit_dc": "B",
+    "code_fo": "71122",
+    "unit_fo": "18"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12112",
+    "unit_fo": "20"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12112",
+    "unit_fo": "20"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12112",
+    "unit_fo": "20"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12112",
+    "unit_fo": "20"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12112",
+    "unit_fo": "20"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12112",
+    "unit_fo": "20"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12112",
+    "unit_fo": "20"
+  },
+  {
+    "unit_dc": "B",
+    "code_fo": "61121",
+    "unit_fo": "6"
+  },
+  {
+    "unit_dc": "B",
+    "code_fo": "61111",
+    "unit_fo": "21"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12113",
+    "unit_fo": "22"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12113",
+    "unit_fo": "22"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12113",
+    "unit_fo": "22"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12113",
+    "unit_fo": "22"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12113",
+    "unit_fo": "22"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12113",
+    "unit_fo": "22"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12113",
+    "unit_fo": "22"
+  },
+  {
+    "unit_dc": "B",
+    "code_fo": "61122",
+    "unit_fo": "9"
+  },
+  {
+    "unit_dc": "B",
+    "code_fo": "61122",
+    "unit_fo": "9"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12112",
+    "unit_fo": "20"
+  },
+  {
+    "unit_dc": "N",
+    "code_fo": "12112",
+    "unit_fo": "20"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12112",
+    "unit_fo": "20"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12112",
+    "unit_fo": "20"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12113",
+    "unit_fo": "22"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12113",
+    "unit_fo": "22"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "12113",
+    "unit_fo": "22"
+  },
+  {
+    "unit_dc": "B",
+    "code_fo": "61122",
+    "unit_fo": "9"
+  },
+  {
+    "unit_dc": "M",
+    "code_fo": "71112",
+    "unit_fo": "23"
+  },
+  {
+    "unit_dc": "M",
+    "code_fo": "71112",
+    "unit_fo": "23"
+  },
+  {
+    "unit_dc": "M",
+    "code_fo": "71112",
+    "unit_fo": "23"
+  },
+  {
+    "unit_dc": "M",
+    "code_fo": "71112",
+    "unit_fo": "23"
+  },
+  {
+    "unit_dc": "M",
+    "code_fo": "71112",
+    "unit_fo": "23"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "71112",
+    "unit_fo": "23"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "11112",
+    "unit_fo": "7"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "11111",
+    "unit_fo": "3"
+  },
+  {
+    "unit_dc": "M",
+    "code_fo": "71111",
+    "unit_fo": "24"
+  },
+  {
+    "unit_dc": "M",
+    "code_fo": "71111",
+    "unit_fo": "24"
+  },
+  {
+    "unit_dc": "M",
+    "code_fo": "71111",
+    "unit_fo": "24"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "61111",
+    "unit_fo": "21"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "61112",
+    "unit_fo": "25"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "61112",
+    "unit_fo": "25"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "61112",
+    "unit_fo": "25"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "61112",
+    "unit_fo": "25"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "11113",
+    "unit_fo": "26"
+  },
+  {
+    "unit_dc": "K",
+    "code_fo": "11112",
+    "unit_fo": "7"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "71112",
+    "unit_fo": "23"
+  },
+  {
+    "unit_dc": "M",
+    "code_fo": "71112",
+    "unit_fo": "23"
+  },
+  {
+    "unit_dc": "M",
+    "code_fo": "71112",
+    "unit_fo": "23"
+  },
+  {
+    "unit_dc": "M",
+    "code_fo": "71112",
+    "unit_fo": "23"
+  },
+  {
+    "unit_dc": "M",
+    "code_fo": "71112",
+    "unit_fo": "23"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "61112",
+    "unit_fo": "25"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "61213",
+    "unit_fo": "27"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "61213",
+    "unit_fo": "27"
+  },
+  {
+    "unit_dc": "Z",
+    "code_fo": "11113",
+    "unit_fo": "26"
+  },
+  {
+    "unit_dc": "K",
+    "code_fo": "11112",
+    "unit_fo": "7"
+  },
+  {
+    "unit_dc": "C",
+    "code_fo": "33121",
+    "unit_fo": "28"
+  },
+  {
+    "unit_dc": "K",
+    "code_fo": "95121",
+    "unit_fo": "29"
+  },
+  {
+    "unit_dc": "K",
+    "code_fo": "35121",
+    "unit_fo": "30"
+  },
+  {
+    "unit_dc": "C",
+    "code_fo": "33121",
+    "unit_fo": "28"
+  },
+  {
+    "unit_dc": "K",
+    "code_fo": "95121",
+    "unit_fo": "29"
+  },
+  {
+    "unit_dc": "K",
+    "code_fo": "95121",
+    "unit_fo": "29"
+  },
+  {
+    "unit_dc": "C",
+    "code_fo": "33121",
+    "unit_fo": "28"
+  },
+  {
+    "unit_dc": "K",
+    "code_fo": "95121",
+    "unit_fo": "29"
+  },
+  {
+    "unit_dc": "K",
+    "code_fo": "95121",
+    "unit_fo": "29"
+  },
+  {
+    "unit_dc": "C",
+    "code_fo": "33121",
+    "unit_fo": "28"
+  }
+]
