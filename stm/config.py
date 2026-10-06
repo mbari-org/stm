@@ -10,6 +10,8 @@ this_dir = Path(__file__).resolve().parent
 class Config:
     PERCH_TIME_BIN_SECONDS = 5
 
+    use_docker: True # Set to False if using local installation with rost_path
+    rost_path: Path = this_dir / "rost-cli" / "bin"
     wav_path: Path = this_dir / "notebooks" / "dataset"
     output_path: Path = this_dir / "notebooks" / "output"
     perch_hop_seconds: float = 0.5
@@ -103,7 +105,9 @@ class Config:
             f"\n==================="
             f"\nCONFIG"
             f"\n==================="
-            f"\nwav_path: {self.wav_path} "
+            f"\nwav_path: {self.wav_path}"
+            f"\nuse_docker: {self.use_docker}"
+            f"\nrost_path: {self.rost_path}"
             f"\noutput_path: {self.doc_path}"
             f"\nword_per_doc: {self.word_per_doc}"
             f"\nmax_topic: {self.max_topic}"
