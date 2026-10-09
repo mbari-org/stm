@@ -8,8 +8,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from perchtopic.features import FeatureBlock, TimeGrid
-from perchtopic.topicmodel.runner import TopicModelRunner, _singleton_noise
+from stm.features import FeatureBlock, TimeGrid
+from stm.topicmodel.runner import TopicModelRunner, _singleton_noise
 
 
 def test_write_documents_and_noise_singletons(tmp_path: Path) -> None:
@@ -90,7 +90,7 @@ def test_run_requires_docs(tmp_path: Path) -> None:
 
 
 def test_run_from_block_linear_model(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    from perchtopic.classify import build_model
+    from stm.classify import build_model
 
     grid = TimeGrid.regular(0.0, hop=5.0, window=5.0, n=2)
     values = np.zeros((2, 4), dtype=np.float32)
@@ -212,7 +212,7 @@ def test_run_from_block_fuses_perch_and_pcen(
 def test_run_from_block_pcen_ignores_mismatched_probe(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from perchtopic.classify import build_model
+    from stm.classify import build_model
 
     monkeypatch.setattr(
         "stm.topicmodel.runner._cluster_word_ids",
