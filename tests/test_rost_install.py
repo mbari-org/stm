@@ -26,8 +26,8 @@ class _Response:
         return False
 
 
-def _tar_bytes(*names: str) -> bytes:
-    """Build a gzip tarball whose root contains bin/<name> files."""
+def _tar_bytes(*names: str, links: dict[str, str] | None = None) -> bytes:
+    """Build a gzip tarball whose root contains bin/<name> files and symlinks."""
     buffer = io.BytesIO()
     with tarfile.open(fileobj=buffer, mode="w:gz") as archive:
         for name in names:
@@ -35,6 +35,11 @@ def _tar_bytes(*names: str) -> bytes:
             info = tarfile.TarInfo(name=f"bin/{name}")
             info.size = len(data)
             archive.addfile(info, io.BytesIO(data))
+        for name, target in (links or {}).items():
+            info = tarfile.TarInfo(name=f"bin/{name}")
+            info.type = tarfile.SYMTYPE
+            info.linkname = target
+            archive.addfile(info)
     return buffer.getvalue()
 
 
@@ -69,6 +74,38 @@ def test_ensure_rost_cli_rejects_archive_missing_a_binary(
         lambda url: _Response(payload),
     )
     with pytest.raises(RuntimeError, match="words.bincount"):
+        ensure_rost_cli(url="https://example.test/rost.tar.gz", dest=tmp_path)
+
+
+def test_ensure_rost_cli_extracts_internal_symlinks(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that a symlink such as bin/topics.render is extracted."""
+    payload = _tar_bytes(
+        "topics.refine.t",
+        "words.bincount",
+        links={"topics.render": "topics.refine.t"},
+    )
+    monkeypatch.setattr(
+        "stm.topicmodel.rost_install.urllib.request.urlopen",
+        lambda url: _Response(payload),
+    )
+    bin_dir = ensure_rost_cli(url="https://example.test/rost.tar.gz", dest=tmp_path)
+    rendered = bin_dir / "topics.render"
+    assert rendered.is_symlink()
+    assert rendered.read_text() == "topics.refine.t\n"
+
+
+def test_ensure_rost_cli_rejects_parent_path_members(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that a member name containing .. is refused."""
+    payload = _tar_bytes("topics.refine.t", "words.bincount", links={"../outside": "topics.refine.t"})
+    monkeypatch.setattr(
+        "stm.topicmodel.rost_install.urllib.request.urlopen",
+        lambda url: _Response(payload),
+    )
+    with pytest.raises(RuntimeError, match="suspect path"):
         ensure_rost_cli(url="https://example.test/rost.tar.gz", dest=tmp_path)
 
 

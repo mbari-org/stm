@@ -48,7 +48,7 @@ def ensure_rost_cli(url: str | None = None, dest: Path | str | None = None) -> P
 
 
 def _extract_archive(payload: bytes, dest: Path) -> None:
-    """Extract a gzip tarball into *dest*, rejecting links and paths outside it."""
+    """Extract a gzip tarball into *dest*, rejecting member paths that escape it."""
     try:
         archive = tarfile.open(fileobj=io.BytesIO(payload), mode="r:gz")
     except tarfile.TarError as exc:
@@ -62,16 +62,16 @@ def _extract_archive(payload: bytes, dest: Path) -> None:
 
 
 def _safe_members(archive: tarfile.TarFile, dest: Path) -> list[tarfile.TarInfo]:
-    dest_resolved = dest.resolve()
+    """Return archive members, including links such as ``bin/topics.render``.
+
+    Member names that are absolute or contain ``..`` are refused. Symlinks and
+    hard links are kept so the rost-cli ``bin/`` tree extracts intact.
+    """
+    del dest
     members: list[tarfile.TarInfo] = []
     for member in archive.getmembers():
-        if member.issym() or member.islnk():
-            raise RuntimeError(f"refusing link in rost-cli archive: {member.name}")
         parts = Path(member.name).parts
         if member.name.startswith("/") or ".." in parts:
-            raise RuntimeError(f"refusing path outside destination: {member.name}")
-        target = (dest / member.name).resolve()
-        if target != dest_resolved and dest_resolved not in target.parents:
-            raise RuntimeError(f"refusing path outside destination: {member.name}")
+            raise RuntimeError(f"refusing suspect path in rost-cli archive: {member.name}")
         members.append(member)
     return members
