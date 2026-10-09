@@ -8,14 +8,7 @@ The topic modeling tool used in this code is Realtime Online Spatiotemporal Topi
 
 Local runs use the Docker image by default. To use prebuilt binaries instead, host a gzip tarball whose root contains `bin/topics.refine.t` and `bin/words.bincount`, then point `ensure_rost_cli()` at it (`STM_ROST_CLI_URL` or the `url` argument). It caches the `bin/` directory under `~/.cache/stm/rost-cli` and returns that path for `TopicModelRunner(use_docker=False, rost_path=...)`. On Debian and Colab, install the shared libraries those binaries link against before running them: `libboost-all-dev`, `libflann-dev`, `libfftw3-dev`, `libopencv-dev`, `libsndfile1-dev`, `libgstreamer-plugins-base1.0-dev`, `libgstreamer1.0-0`, and `libhdf5-dev`.
 
-Build the archive from a compiled tree (`tar -C /app/rost-cli -czf rost-cli-linux-x86_64.tar.gz bin`) and upload it with:
-
-```bash
-pip install 'stm[deploy]'
-python -m stm.topicmodel.rost_deploy s3://BUCKET/prefix rost-cli-linux-x86_64.tar.gz
-```
-
-The command prints the HTTPS object URL. Set that URL as `STM_ROST_CLI_URL`. The bucket or object must be publicly readable for `ensure_rost_cli()` to download it.
+Build the archive from a compiled tree (`tar -C /app/rost-cli -czf rost-cli-linux-x86_64.tar.gz bin`) and upload it with boto3. The object must be publicly readable. Set the HTTPS object URL as `STM_ROST_CLI_URL`.
 
 There are many parameters that can be adjusted to tune the model to the data.  Default parameters are set to work well 
 with underwater sounds, but can be adjusted for other applications.  All parameters are in the `conf.yaml` file.

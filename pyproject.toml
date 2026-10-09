@@ -30,9 +30,6 @@ maintainers = [
 [project.scripts]
 perchtopic = "perchtopic.__main__:app"
 
-[project.optional-dependencies]
-deploy = ["boto3>=1.35"]
-
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",

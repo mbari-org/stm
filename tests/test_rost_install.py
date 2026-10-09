@@ -1,6 +1,6 @@
 # stm, Apache-2.0 license
 # Filename: test_rost_install.py
-# Description: Tests for rost-cli download and S3 deploy
+# Description: Tests for downloading prebuilt rost-cli binaries
 from __future__ import annotations
 
 import io
@@ -9,7 +9,6 @@ from pathlib import Path
 
 import pytest
 
-from stm.topicmodel.rost_deploy import deploy_rost_cli, parse_bucket
 from stm.topicmodel.rost_install import ensure_rost_cli
 
 
@@ -25,14 +24,6 @@ class _Response:
 
     def __exit__(self, *args: object) -> bool:
         return False
-
-
-class _FakeS3:
-    def __init__(self) -> None:
-        self.calls: list[tuple[str, str, str]] = []
-
-    def upload_file(self, filename: str, bucket: str, key: str) -> None:
-        self.calls.append((filename, bucket, key))
 
 
 def _tar_bytes(*names: str) -> bytes:
@@ -94,54 +85,3 @@ def test_ensure_rost_cli_requires_a_url(
     monkeypatch.setattr("stm.topicmodel.rost_install.urllib.request.urlopen", urlopen)
     with pytest.raises(RuntimeError, match="URL is unset"):
         ensure_rost_cli(dest=tmp_path)
-
-
-def test_parse_bucket_accepts_name_and_uri() -> None:
-    """Test that a bare name and an s3:// URI both parse."""
-    assert parse_bucket("my-bucket") == ("my-bucket", "")
-    assert parse_bucket("s3://my-bucket/releases/linux") == (
-        "my-bucket",
-        "releases/linux",
-    )
-
-
-def test_deploy_rost_cli_uploads_to_bucket_and_prefix(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that the tar is uploaded under the URI prefix and the URL is printed."""
-    tar_path = tmp_path / "rost-cli-linux-x86_64.tar.gz"
-    tar_path.write_bytes(b"archive")
-    client = _FakeS3()
-    url = deploy_rost_cli("s3://my-bucket/releases", tar_path, client=client)
-    assert client.calls == [
-        (str(tar_path), "my-bucket", "releases/rost-cli-linux-x86_64.tar.gz")
-    ]
-    assert url == (
-        "https://my-bucket.s3.amazonaws.com/releases/rost-cli-linux-x86_64.tar.gz"
-    )
-    assert capsys.readouterr().out.strip() == url
-
-
-def test_deploy_rost_cli_uses_explicit_key(tmp_path: Path) -> None:
-    """Test that --key replaces the object name and still takes the URI prefix."""
-    tar_path = tmp_path / "local.tar.gz"
-    tar_path.write_bytes(b"archive")
-    client = _FakeS3()
-    deploy_rost_cli("my-bucket", tar_path, key="custom/rost.tar.gz", client=client)
-    assert client.calls == [(str(tar_path), "my-bucket", "custom/rost.tar.gz")]
-
-
-def test_deploy_requires_boto3_when_no_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test that a missing boto3 install exits with the extra name."""
-    tar_path = tmp_path / "rost.tar.gz"
-    tar_path.write_bytes(b"archive")
-    real_import = __import__
-
-    def fake_import(name: str, *args: object, **kwargs: object):
-        if name == "boto3":
-            raise ImportError("no boto3")
-        return real_import(name, *args, **kwargs)
-
-    monkeypatch.setattr("builtins.__import__", fake_import)
-    with pytest.raises(SystemExit, match="stm\\[deploy\\]"):
-        deploy_rost_cli("my-bucket", tar_path)
