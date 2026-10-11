@@ -14,8 +14,6 @@ dependencies = [
     "pysrt>=1.1.2",
     "pyyaml>=6.0.3",
     "soundfile>=0.14.0",
-    "torch==2.14.1",
-    "torchvision==0.29.1",
     "umap-learn>=0.5.7",
 ]
 readme = "README.md"
@@ -27,8 +25,18 @@ maintainers = [
     {name = "Danelle Cline", email="dcline@mbari.org"},
 ]
 
+[project.optional-dependencies]
+cpu = [
+    "torch==2.14.1",
+    "torchvision==0.29.1",
+]
+cu130 = [
+    "torch==2.14.1",
+    "torchvision==0.29.1",
+]
+
 [project.scripts]
-perchtopic = "perchtopic.__main__:app"
+perchtopic = "stm.__main__:app"
 
 [dependency-groups]
 dev = [
@@ -46,3 +54,31 @@ include = [
     "classify.py",
     "config.py"
 ]
+
+[tool.uv]
+conflicts = [
+    [
+        { extra = "cpu" },
+        { extra = "cu130" },
+    ],
+]
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu", extra = "cpu", marker = "sys_platform != 'darwin'" },
+    { index = "pytorch-cu130", extra = "cu130" },
+]
+torchvision = [
+    { index = "pytorch-cpu", extra = "cpu", marker = "sys_platform != 'darwin'" },
+    { index = "pytorch-cu130", extra = "cu130" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
