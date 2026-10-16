@@ -20,6 +20,12 @@ perch_batch_size: 64
 perch_peak_normalize: True
 perch_peak_target: 0.25
 
+# Seconds of audio kept from the start of each unit clip before it is extended to Perch
+# v2's native 5 s /  160000-sample input with perch_window_fill. Clips longer than this
+# are truncated. Keep <= 5.0; anything past 5 s is dropped by the model input size.
+perch_hop_seconds: 0.5
+# perch_hop_seconds: step between successive Perch windows, in seconds.
+perch_audio_seconds: 2.0
 
 # STFT / PCEN
 window_size: 2048
