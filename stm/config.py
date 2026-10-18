@@ -38,6 +38,11 @@ class Config:
     online_mint: int = 5
     pcen_power_to_db: bool = True
     pcen_cluster: str | None = None
+    umap_components: int = 10
+    umap_neighbors: int = 15
+    hdbscan_min_cluster_size: int = 50
+    hdbscan_min_samples: int | None = None  # None -> hdbscan_min_cluster_size
+    hdbscan_allow_single_cluster: bool = False
     pcen_n_clusters: int | None = None
     num_topics: int | None = None
 
@@ -132,6 +137,11 @@ class Config:
             f"\npcen_time_constant: {self.pcen_time_constant}"
             f"\npcen_power_to_db: {self.pcen_power_to_db}"
             f"\npcen_cluster: {self.pcen_cluster}"
+            f"\numap_components: {self.umap_components}"
+            f"\numap_neighbors: {self.umap_neighbors}"
+            f"\nhdbscan_min_cluster_size: {self.hdbscan_min_cluster_size}"
+            f"\nhdbscan_min_samples: {self.hdbscan_min_samples}"
+            f"\nhdbscan_allow_single_cluster: {self.hdbscan_allow_single_cluster}"
             f"\npcen_n_clusters: {self.pcen_n_clusters}"
         )
 

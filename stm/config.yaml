@@ -46,6 +46,13 @@ pcen_power_to_db: True
 pcen_cluster: "kmeans"
 pcen_n_clusters: null
 
+# UMAP + HDBSCAN for Perch words when no linear probe is used.
+# min_cluster_size is capped at the number of embeddings; tune ~10-50 for small unit sets.
+umap_components: 10
+umap_neighbors: 15
+hdbscan_min_cluster_size: 50
+hdbscan_min_samples: null  # null -> same as hdbscan_min_cluster_size
+hdbscan_allow_single_cluster: False
 
 # Topic model parameters
 num_topics: None # If None, the model will grow topics dynamically.

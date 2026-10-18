@@ -11,7 +11,7 @@ import numpy as np
 import onnxruntime as ort
 import soundfile as sf
 
-from stm.cache import UnitCacheKey
+from stm.cache import PERCH_PEAK_TARGET, UnitCacheKey
 
 PERCH_ONNX_URL = "https://huggingface.co/justinchuby/Perch-onnx/resolve/main/perch_v2.onnx"
 PERCH_INPUT_SAMPLES = 160000  # Perch v2: 5 s at 32 kHz
@@ -60,6 +60,21 @@ def _fill_to_length(segment: np.ndarray, n: int, fill: str) -> np.ndarray:
     return out
 
 
+def peak_normalize(
+    windows: np.ndarray, target: float = PERCH_PEAK_TARGET, eps: float = 1e-8
+) -> np.ndarray:
+    """Scale each row of ``(N, S)`` *windows* so its max ``|x|`` equals *target*.
+
+    Silent rows (peak <= *eps*) are left unchanged. Returns a new float32 array.
+    """
+    windows = np.array(windows, dtype=np.float32, copy=True)
+    if windows.ndim == 1:
+        return peak_normalize(windows[None, :], target, eps)[0]
+    peak = np.abs(windows).max(axis=1, keepdims=True)
+    scale = np.where(peak > eps, target / np.maximum(peak, eps), 1.0).astype(np.float32)
+    return windows * scale
+
+
 def load_onnx_session(model_path: Path) -> ort.InferenceSession:
     """Load (or download) perch_v2.onnx and return an inference session."""
     model_path = _ensure_onnx_model(Path(model_path))
@@ -87,6 +102,9 @@ def embed_windows(
 ) -> np.ndarray:
     """Embed a ``(N, PERCH_INPUT_SAMPLES)`` float32 batch. Returns ``(N, D)``.
 
+    Each window is peak-normalized to :data:`PERCH_PEAK_TARGET` first
+    (see :func:`peak_normalize`), as Perch 2.0 expects.
+
     *progress_offset* / *progress_total* are the clip indices in the full
     extract, so a caller that feeds one ONNX batch at a time still reports
     ``1-256 of 768`` instead of ``1-256 of 256``.
@@ -96,6 +114,7 @@ def embed_windows(
         raise ValueError(
             f"windows must have shape (N, {PERCH_INPUT_SAMPLES}), got {windows.shape}"
         )
+    windows = peak_normalize(windows)
     input_name, output_name = _session_io(session)
     parts = []
     n = len(windows)

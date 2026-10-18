@@ -4,6 +4,22 @@ Tools for discovering units, phrases, and themes in audio files using Perch2 emb
 with a topic model.  Outputs can be edited using the popular [Raven](https://www.ravensoundsoftware.com/) then trained
 for classification using a linear probe.  
 
+## Install
+
+PyTorch is an optional extra. Sync the CPU build on macOS, or on Linux and Windows without a GPU:
+
+```
+uv sync --extra cpu
+```
+
+Sync the CUDA 13.0 build on Linux or Windows:
+
+```
+uv sync --extra cu130
+```
+
+`uv sync` without an extra leaves PyTorch out. Tests and `uv run` commands that import `torch` need `--extra cpu`. The `cu130` extra is Linux and Windows only.
+
 The topic modeling tool used in this code is Realtime Online Spatiotemporal Topic Modeling [rost-cli tool](https://gitlab.com/warplab/rost-cli).
 
 Local runs use the Docker image by default. To use prebuilt binaries instead, host a gzip tarball whose root contains `bin/topics.refine.t` and `bin/words.bincount`, then point `ensure_rost_cli()` at it (`STM_ROST_CLI_URL` or the `url` argument). It caches the `bin/` directory under `~/.cache/stm/rost-cli` and returns that path for `TopicModelRunner(use_docker=False, rost_path=...)`. On Debian and Colab, install the shared libraries those binaries link against before running them: `libboost-all-dev`, `libflann-dev`, `libfftw3-dev`, `libopencv-dev`, `libsndfile1-dev`, `libgstreamer-plugins-base1.0-dev`, `libgstreamer1.0-0`, and `libhdf5-dev`.

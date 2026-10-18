@@ -11,7 +11,13 @@ import pytest
 import soundfile as sf
 
 from stm.cache import UnitCacheKey
-from stm.embed import PERCH_INPUT_SAMPLES, Embedding, embed_windows, total_audio_seconds
+from stm.embed import (
+    PERCH_INPUT_SAMPLES,
+    Embedding,
+    embed_windows,
+    peak_normalize,
+    total_audio_seconds,
+)
 
 
 def _write_wav(path: Path, n_samples: int, sr: int = 32000) -> None:
@@ -104,3 +110,53 @@ def test_cache_hit_backfills_total_audio_seconds(tmp_path: Path) -> None:
 
     meta = json.loads((cache_dir / "unit_metadata.json").read_text())
     np.testing.assert_allclose(meta["total_audio_seconds"], 2.0)
+
+
+def test_peak_normalize_scales_each_window_to_target() -> None:
+    """Test that every non-silent window ends up with max |x| == 0.25 and silent rows stay zero"""
+    rng = np.random.default_rng(0)
+    windows = np.stack(
+        [
+            0.01 * rng.standard_normal(1000),
+            0.9 * rng.standard_normal(1000),
+            np.zeros(1000),
+        ]
+    ).astype(np.float32)
+    out = peak_normalize(windows)
+    np.testing.assert_allclose(np.abs(out[:2]).max(axis=1), 0.25, rtol=1e-6)
+    np.testing.assert_array_equal(out[2], 0.0)
+    # shape preserved; input untouched; waveform shape unchanged up to scale
+    assert out.shape == windows.shape and out.dtype == np.float32
+    assert np.abs(windows[0]).max() < 0.1
+    np.testing.assert_allclose(out[0] / out[0][np.argmax(np.abs(out[0]))],
+                               windows[0] / windows[0][np.argmax(np.abs(windows[0]))], rtol=1e-5)
+
+
+def test_embed_windows_feeds_peak_normalized_input() -> None:
+    """Test that embed_windows sends peak-normalized windows to the ONNX session"""
+
+    class _IO:
+        def __init__(self, name: str) -> None:
+            self.name = name
+
+    class FakeSession:
+        def __init__(self) -> None:
+            self.seen: list[np.ndarray] = []
+
+        def get_inputs(self):
+            return [_IO("inputs")]
+
+        def get_outputs(self):
+            return [_IO("embedding")]
+
+        def run(self, outputs, feeds):
+            x = feeds["inputs"]
+            self.seen.append(x)
+            return [np.zeros((len(x), 4), dtype=np.float32)]
+
+    windows = np.full((3, PERCH_INPUT_SAMPLES), 0.002, dtype=np.float32)
+    windows[1] *= 100.0
+    session = FakeSession()
+    embed_windows(windows, session, batch_size=2)
+    fed = np.concatenate(session.seen, axis=0)
+    np.testing.assert_allclose(np.abs(fed).max(axis=1), 0.25, rtol=1e-6)

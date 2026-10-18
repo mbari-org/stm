@@ -98,7 +98,7 @@ def test_extract_uses_embed_windows(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     np.testing.assert_array_equal(block.values[2], 0)
     assert block.provenance["extractor"] == "Perch2Extractor"
     assert block.provenance["source"] == str(wav)
-    assert (tmp_path / "perch_raw" / "hop_0.5_audio_1_fill-pad" / "a.values.npy").is_file()
+    assert (tmp_path / "perch_raw" / "hop_0.5_audio_1_fill-pad_peak-0.25" / "a.values.npy").is_file()
 
 
 def test_extract_directory_rglob_wavs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -165,7 +165,7 @@ def test_extract_writes_and_reuses_cache(
     assert calls["n"] == 1
     np.testing.assert_array_equal(first.values, second.values)
     np.testing.assert_array_equal(first.mask, second.mask)
-    cache_dir = output / "perch_raw" / "hop_0.5_audio_1_fill-pad"
+    cache_dir = output / "perch_raw" / "hop_0.5_audio_1_fill-pad_peak-0.25"
     assert (cache_dir / "a.values.npy").is_file()
     assert (cache_dir / "a.metadata.json").is_file()
     assert second.provenance["cache_dir"] == str(cache_dir)
@@ -195,8 +195,8 @@ def test_extract_cache_miss_on_window_fill(
     pad.extract(wav, grid)
     tile.extract(wav, grid)
     assert calls["n"] == 2
-    assert (output / "perch_raw" / "hop_1_audio_1_fill-pad").is_dir()
-    assert (output / "perch_raw" / "hop_1_audio_1_fill-tile").is_dir()
+    assert (output / "perch_raw" / "hop_1_audio_1_fill-pad_peak-0.25").is_dir()
+    assert (output / "perch_raw" / "hop_1_audio_1_fill-tile_peak-0.25").is_dir()
 
 
 def test_extract_resumes_partial_cache(

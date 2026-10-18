@@ -154,6 +154,7 @@ class TopicModelRunner:
         perch_method: str = "hdbscan",
         pcen_method: str = "kmeans",
         document_name: str = "all_docs",
+        cluster_params: dict | None = None,
     ) -> TopicModelResult:
         """Write documents from a Perch2 and/or PCEN block and run ROST.
 
@@ -168,6 +169,9 @@ class TopicModelRunner:
         word, then PCEN word with a disjoint id range). Documents span
         ``document_seconds`` of audio (the analysis window length if unset),
         converted to a row count from the output grid's hop.
+        *cluster_params* are extra UMAP/HDBSCAN keyword arguments for
+        :class:`~stm.cluster.DensityCluster`, e.g.
+        ``stm.cluster.density_params(config)``.
         """
         blocks = _as_blocks(block)
         if labels is not None and linear_model is not None:
@@ -187,6 +191,7 @@ class TopicModelRunner:
                 assign_noise=assign_noise,
                 perch_method=perch_method,
                 pcen_method=pcen_method,
+                cluster_params=cluster_params,
             )
 
         doc_words = _rows_per_doc(grid, self.document_seconds)
@@ -530,6 +535,7 @@ def _cluster_word_ids(
     method: str,
     random_state: int,
     assign_noise: bool,
+    cluster_params: dict | None = None,
 ) -> tuple[np.ndarray, int]:
     """Discrete word ids from :mod:`stm.cluster`.
 
@@ -554,7 +560,12 @@ def _cluster_word_ids(
     elif method == "hdbscan":
         from stm.cluster import DensityCluster
 
-        clustered = DensityCluster(values, random_state=random_state, assign_noise=assign_noise)
+        clustered = DensityCluster(
+            values,
+            random_state=random_state,
+            assign_noise=assign_noise,
+            **(cluster_params or {}),
+        )
     else:
         raise ValueError(f"method must be 'kmeans' or 'hdbscan', got {method!r}")
 
@@ -653,6 +664,7 @@ def _word_ids_from_blocks(
     assign_noise: bool,
     perch_method: str = "hdbscan",
     pcen_method: str = "kmeans",
+    cluster_params: dict | None = None,
 ) -> tuple[np.ndarray, int, TimeGrid, np.ndarray | None]:
     pcen_blocks = [item for item in blocks if _is_pcen(item)]
     perch_blocks = [item for item in blocks if not _is_pcen(item)]
@@ -671,6 +683,7 @@ def _word_ids_from_blocks(
                 method=perch_method,
                 random_state=random_state,
                 assign_noise=assign_noise,
+                cluster_params=cluster_params,
             )
         scattered, mask = _scatter_ids(perch, ids)
         streams.append((scattered, mask, perch.grid, vocab))
@@ -681,6 +694,7 @@ def _word_ids_from_blocks(
             method=pcen_method,
             random_state=random_state,
             assign_noise=assign_noise,
+            cluster_params=cluster_params,
         )
         scattered, mask = _scatter_ids(pcen, ids)
         streams.append((scattered, mask, pcen.grid, vocab))

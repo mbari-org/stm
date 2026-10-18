@@ -1,5 +1,5 @@
 # stm, Apache-2.0 license
-# Filename: cluster.py
+# Filename: cluster/density.py
 # Description: HDBSCAN clustering of UMAP-reduced embeddings
 from __future__ import annotations
 
@@ -13,19 +13,45 @@ import soundfile as sf
 import umap
 
 from stm.config import Config
-from stm.embed import PERCH_INPUT_SAMPLES, _ensure_onnx_model, _fill_to_length
+from stm.embed import PERCH_INPUT_SAMPLES, _ensure_onnx_model, _fill_to_length, peak_normalize
 
-UMAP_COMPONENTS = 250
-HDBSCAN_MIN_CLUSTER_SIZE = 2
+UMAP_COMPONENTS = 10
+UMAP_NEIGHBORS = 15
+HDBSCAN_MIN_CLUSTER_SIZE = 50
+HDBSCAN_MIN_SAMPLES: int | None = None  # None -> same as min_cluster_size
+HDBSCAN_ALLOW_SINGLE_CLUSTER = False
+
+
+def density_params(config: Config | None) -> dict:
+    """UMAP/HDBSCAN keyword arguments for :class:`DensityCluster` from *config*."""
+    if config is None:
+        return {}
+    return {
+        "n_components": config.umap_components,
+        "n_neighbors": config.umap_neighbors,
+        "min_cluster_size": config.hdbscan_min_cluster_size,
+        "min_samples": config.hdbscan_min_samples,
+        "allow_single_cluster": config.hdbscan_allow_single_cluster,
+    }
 
 class DensityCluster:
-    """Cluster embeddings with UMAP (15-D) then HDBSCAN."""
+    """Cluster embeddings with cosine UMAP (``n_components``-D) then HDBSCAN.
+
+    ``min_samples`` defaults to ``min_cluster_size``. Both are capped at the
+    number of embeddings so small inputs do not raise.
+    """
 
     def __init__(
         self,
         embeddings: np.ndarray,
         random_state: int = 0,
         assign_noise: bool = False,
+        *,
+        n_components: int = UMAP_COMPONENTS,
+        n_neighbors: int = UMAP_NEIGHBORS,
+        min_cluster_size: int = HDBSCAN_MIN_CLUSTER_SIZE,
+        min_samples: int | None = HDBSCAN_MIN_SAMPLES,
+        allow_single_cluster: bool = HDBSCAN_ALLOW_SINGLE_CLUSTER,
     ):
         self.embeddings = np.asarray(embeddings)
         if self.embeddings.ndim != 2:
@@ -36,10 +62,14 @@ class DensityCluster:
         if n_samples < 2:
             raise ValueError(f"need at least 2 embeddings to cluster, got {n_samples}")
 
-        n_neighbors = min(15, n_samples - 1)
-        print(f"UMAP {self.embeddings.shape} -> {UMAP_COMPONENTS}-D (cosine)")
+        n_neighbors = min(int(n_neighbors), n_samples - 1)
+        n_components = min(int(n_components), n_samples - 1)
+        print(
+            f"UMAP {self.embeddings.shape} -> {n_components}-D "
+            f"(cosine, n_neighbors={n_neighbors})"
+        )
         self.umap = umap.UMAP(
-            n_components=min(UMAP_COMPONENTS, n_samples - 1),
+            n_components=n_components,
             n_neighbors=n_neighbors,
             metric="cosine",
             random_state=random_state,
@@ -47,8 +77,20 @@ class DensityCluster:
         )
         self.reduced = self.umap.fit_transform(self.embeddings)
 
-        print("HDBSCAN clustering")
-        self.hdbscan = hdbscan.HDBSCAN(allow_single_cluster=True, min_cluster_size=HDBSCAN_MIN_CLUSTER_SIZE)
+        mcs = max(2, min(int(min_cluster_size), n_samples))
+        ms = mcs if min_samples is None else int(min_samples)
+        ms = max(1, min(ms, n_samples - 1))
+        if mcs != int(min_cluster_size):
+            print(f"min_cluster_size {min_cluster_size} capped to {mcs} for {n_samples} samples")
+        print(
+            f"HDBSCAN min_cluster_size={mcs} min_samples={ms} "
+            f"allow_single_cluster={allow_single_cluster}"
+        )
+        self.hdbscan = hdbscan.HDBSCAN(
+            min_cluster_size=mcs,
+            min_samples=ms,
+            allow_single_cluster=bool(allow_single_cluster),
+        )
         self.labels = self.hdbscan.fit_predict(self.reduced)
         n_noise = int(np.sum(self.labels == -1))
         if assign_noise and n_noise:
@@ -139,7 +181,7 @@ def _embed_wavs(
                 perch_window_fill,
             )
         )
-    batch = np.stack(windows).astype(np.float32)
+    batch = peak_normalize(np.stack(windows))
     parts = []
     for lo in range(0, len(batch), batch_size):
         hi = min(lo + batch_size, len(batch))
@@ -184,7 +226,12 @@ def cluster_directory(
     embeddings = _embed_wavs(
         clips, Path(model_path), perch_audio_seconds, perch_window_fill
     )
-    cluster = DensityCluster(embeddings, random_state=random_state, assign_noise=assign_noise)
+    cluster = DensityCluster(
+        embeddings,
+        random_state=random_state,
+        assign_noise=assign_noise,
+        **density_params(config),
+    )
 
     stem = directory.name
     counts: dict[int, int] = {}

@@ -14,6 +14,11 @@ import numpy as np
 
 from stm.config import Config
 
+# Perch 2.0 input convention: each 5 s window is peak-normalized to this
+# amplitude before the model (matches Google's reference wrapper).
+# Recorded in every Perch cache key so embeddings made without it are never reused.
+PERCH_PEAK_TARGET = 0.25
+
 
 def atomic_write_json(path: Path, payload: dict[str, Any]) -> None:
     """Write *payload* as JSON, replacing *path* only after a full flush."""
@@ -73,6 +78,7 @@ class UnitCacheKey:
             "perch_hop_seconds": self.perch_hop_seconds,
             "perch_audio_seconds": self.perch_audio_seconds,
             "perch_window_fill": self.perch_window_fill,
+            "perch_peak_target": PERCH_PEAK_TARGET,
         }
 
     def dir_label(self) -> str:
@@ -81,6 +87,7 @@ class UnitCacheKey:
             f"hop_{self.perch_hop_seconds:g}"
             f"_audio_{self.perch_audio_seconds:g}"
             f"_fill-{self.perch_window_fill}"
+            f"_peak-{PERCH_PEAK_TARGET:g}"
         )
 
     def cache_dir(self, base: Path | None = None) -> Path:
@@ -142,15 +149,16 @@ class PerchCacheKey:
             "wav_mtime_ns": str(self.wav_mtime_ns),
             "wav_size": self.wav_size,
             "edges_sha1": self.edges_sha1,
+            "perch_peak_target": PERCH_PEAK_TARGET,
         }
 
     def dir_label(self) -> str:
         """Folder name under ``perch_raw/`` for this cache key."""
         if self.edges_sha1:
-            return f"edges_{self.edges_sha1}_fill-{self.window_fill}"
+            return f"edges_{self.edges_sha1}_fill-{self.window_fill}_peak-{PERCH_PEAK_TARGET:g}"
         hop = 0.0 if self.grid_hop is None else self.grid_hop
         window = 0.0 if self.grid_window is None else self.grid_window
-        return f"hop_{hop:g}_audio_{window:g}_fill-{self.window_fill}"
+        return f"hop_{hop:g}_audio_{window:g}_fill-{self.window_fill}_peak-{PERCH_PEAK_TARGET:g}"
 
     def cache_dir(self, base: Path | None = None) -> Path:
         """Directory for Perch2 window embeddings keyed by grid settings."""
