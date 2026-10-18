@@ -57,6 +57,7 @@ TODO: add description of Perch2 and PCEN features.
 
 # Acknowledgements
 
-Foundation for the application of topic modeling was the excellent work done by a former MBARI intern project 
-[hb-song-analysis Thomas Bergamaschi](https://github.com/tbergama/hb-song-analysis)
+Foundation for the application of topic modeling was the excellent work done by a former MBARI interns 
+[hb-song-analysis Thomas Bergamaschi](https://github.com/tbergama/hb-song-analysis)  
+[Evaluating the Performance of Topic Modeling for Humpback Whale Song Phrase Segmentation](https://www.mbari.org/wp-content/uploads/Oppenheimer_Franny.pdf)
 
